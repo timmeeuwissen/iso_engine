@@ -1,0 +1,1 @@
+class Tree extends Entity 

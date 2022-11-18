@@ -1,0 +1,15 @@
+{
+  "name": "iso_engine",
+  "version": "1.0.0",
+  "description": "Isomorphic Javascript engine written in Coffeescript. Just for fun.",
+  "main": "index.js",
+  "author": "Tim Meeuwissen",
+  "license": "MIT",
+  "private": true,
+  "dependencies": {
+    "babel": "^6.23.0",
+    "coffee-loader": "^4.0.0",
+    "coffeescript": "^2.7.0",
+    "typescript": "^4.9.3"
+  }
+}

@@ -1,0 +1,21 @@
+{
+    "canvas": {
+        "width": 100,
+        "height": 100
+    },
+    "terrain": {
+        "dims": {
+            "x": 50,
+            "z": 50
+        },
+        "level": {
+            "water": 0,
+            "snow": 6,
+            "plane": 2
+        },
+        "tile": {
+            "width": 10,
+            "height": 10
+        }
+    }
+}
