@@ -1,13 +1,6 @@
-import { iInteract } from "../aInteract";
+import { aInteract } from "../aInteract";
 
-class InteractMouse implements iInteract {
-    canvas: HTMLCanvasElement
-    container: HTMLElement
-
-    constructor(canvas: HTMLCanvasElement) {
-        this.canvas = canvas;
-        this.container = canvas.parentElement || document.body;
-    }
+class InteractMouse extends aInteract {
 
     mouseDown(ctx: GlobalEventHandlers, me: MouseEvent) {}
 

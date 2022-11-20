@@ -15,7 +15,13 @@
         },
         "tile": {
             "width": 10,
-            "height": 10
+            "height": 10,
+            "line": {
+                "lineJoin": "round",
+                "lineCap": "round",
+                "strokeStyle": "#000",
+                "lineWidth": 1
+            }
         }
     }
 }

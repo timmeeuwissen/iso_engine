@@ -1,11 +1,11 @@
-import { iConfig, iConfigTerrain } from "./iConfig"
+import { tConfig, tConfigTerrain } from "./tConfig"
 import { aInteract } from "./aInteract"
 import { Map } from './Map'
 
 class Draw {
     canvas: HTMLCanvasElement
     ctx: CanvasRenderingContext2D
-    terrainConfig:iConfigTerrain
+    terrainConfig:tConfigTerrain
     tileDraw: {
         x: number,
         y: number
@@ -17,7 +17,7 @@ class Draw {
     map: Map
     interactStrategy: aInteract | null = null
 
-    constructor(canvas: HTMLCanvasElement, terrainConfig: iConfigTerrain, width:number, height:number) {
+    constructor(canvas: HTMLCanvasElement, terrainConfig: tConfigTerrain, width:number, height:number) {
         this.canvas = canvas
         this.ctx = canvas.getContext('2d') as CanvasRenderingContext2D
         this.terrainConfig = terrainConfig
@@ -42,11 +42,10 @@ class Draw {
     }
     
     draw_grid(x, z) {
-        this.ctx.lineJoin = "round";
-        this.ctx.lineCap = "round";
-        this.ctx.strokeStyle = "#000";
-        this.ctx.lineWidth = 1;
-        
+        Object.entries(this.terrainConfig.tile.line).forEach(
+            ([key, value]) => this.ctx[key] = value
+        );
+          
         //  draw an isometric square
         this.ctx.moveTo(this.startPos.x + (x - 1) * this.tileDraw.x, this.startPos.y + (z - 1) * this.tileDraw.y);
         this.ctx.lineTo(this.startPos.x + x * 0.5 * this.tileDraw.x, this.startPos.y + z * 0.5 * this.tileDraw.y);

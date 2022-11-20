@@ -1,7 +1,13 @@
-canvas = $('#drawn').get(0)
+import { InteractMouse } from './interactors/Mouse' 
+import { terrain as terrainConfig, canvas as canvasConfig} from './config.json'
+import { Draw } from './Draw'
+import { Map } from './Map'
 
-interact_strategy = new Interact
+const canvas:HTMLCanvasElement = document.getElementById('game_canvas') as HTMLCanvasElement;
+const interact_strategy = new InteractMouse(canvas)
+const map = new Map();
 
-draw = new Draw canvas, config.terrain
-draw.load_map map
-draw.set_interact_strategy interact_strategy
+const draw = new Draw(canvas, terrainConfig, canvasConfig.width, canvasConfig.height)
+draw.load_map(map)
+draw.set_interact_strategy(interact_strategy)
+// todo: execute attach interact strategy
