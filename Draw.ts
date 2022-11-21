@@ -1,67 +1,61 @@
-import { tConfig, tConfigTerrain } from "./tConfig"
-import { aInteract } from "./aInteract"
+import { tConfigTerrain } from "./tConfig"
 import { Map } from './Map'
 
-class Draw {
-    canvas: HTMLCanvasElement
-    ctx: CanvasRenderingContext2D
-    terrainConfig:tConfigTerrain
-    tileDraw: {
-        x: number,
-        y: number
-    }
-    startPos: {
-        x: number,
-        y: number
-    }
-    map: Map
-    interactStrategy: aInteract | null = null
+type tTilePos = [number,number][]
 
-    constructor(canvas: HTMLCanvasElement, terrainConfig: tConfigTerrain, width:number, height:number) {
-        this.canvas = canvas
-        this.ctx = canvas.getContext('2d') as CanvasRenderingContext2D
-        this.terrainConfig = terrainConfig
-        
-        // TODO: calculate the actual movement when the tile is projected in iso perspective
-        // TODO: the incline of the perspective should be 30 percent
-        this.tileDraw = {
-            x: 12,
-            y: 12 / 3 * 2
-        }
-        
-        this.startPos = {x: width / 2, y: height}
-    }
-    
-    load_map(map: Map) {
-        this.map = map
-        this.redraw()
-    }
+export const Draw = (canvas: HTMLCanvasElement, terrainConfig: tConfigTerrain, width:number, height:number) => {
+    const ctx = canvas.getContext('2d') as CanvasRenderingContext2D
 
-    set_interact_strategy(interact_strategy: aInteract) {
-        this.interactStrategy = interact_strategy
+    // TODO: calculate the actual movement when the tile is projected in iso perspective
+    // TODO: the incline of the perspective should be 30 percent
+    const tileDraw = {
+        x: 12,
+        y: 12 / 3 * 2
     }
-    
-    draw_grid(x, z) {
-        Object.entries(this.terrainConfig.tile.line).forEach(
-            ([key, value]) => this.ctx[key] = value
+    const startPos = {x: width / 2, y: height}
+
+    //  draw an isometric square
+    const draw_tile = (x, z) => {
+        Object.entries(terrainConfig.tile.line).forEach(
+            ([key, value]) => ctx[key] = value
         );
-          
-        //  draw an isometric square
-        this.ctx.moveTo(this.startPos.x + (x - 1) * this.tileDraw.x, this.startPos.y + (z - 1) * this.tileDraw.y);
-        this.ctx.lineTo(this.startPos.x + x * 0.5 * this.tileDraw.x, this.startPos.y + z * 0.5 * this.tileDraw.y);
-        this.ctx.lineTo(this.startPos.x + (x - 1) * this.tileDraw.x, this.startPos.y + z * this.tileDraw.y);
-        this.ctx.lineTo(this.startPos.x - x * 0.5 * this.tileDraw.x, this.startPos.y + z * 0.5 * this.tileDraw.y);
-        this.ctx.lineTo(this.startPos.x + (x - 1) * this.tileDraw.x, this.startPos.y + (z - 1) * this.tileDraw.y);
+        
+        const tilePos:tTilePos = [
+            [startPos.x + (x - 1) * tileDraw.x, startPos.y + (z - 1) * tileDraw.y],
+            [startPos.x + x * 0.5 * tileDraw.x, startPos.y + z * 0.5 * tileDraw.y],
+            [startPos.x + (x - 1) * tileDraw.x, startPos.y + z * tileDraw.y],
+            [startPos.x - x * 0.5 * tileDraw.x, startPos.y + z * 0.5 * tileDraw.y]
+        ]
+
+        const lineOps: [(x: number, y: number) => void, number, number][] = [
+            [ctx.moveTo, 0, 0],
+            [ctx.lineTo, 1, 1],
+            [ctx.lineTo, 2, 1],
+            [ctx.lineTo, 3, 1],
+            [ctx.lineTo, 0, 1],
+        ]
+        
+        lineOps.reduce(
+            (acc, [cFn, iPos, lineDrew]) => { 
+                cFn.apply(tilePos[iPos]); 
+                acc.lines += lineDrew;
+                return acc;
+            }, 
+            {lines: 0}
+        )
+
     }
 
-    redraw() {
+    const draw_grid = () => {
         let x:number, z:number
-        for (x = 1; x <= this.terrainConfig.dims.x; x++) {
-            for (z = 1; z <= this.terrainConfig.dims.z; z++) {
-                this.draw_grid(x, z)
+        for (x = 1; x <= terrainConfig.dims.x; x++) {
+            for (z = 1; z <= terrainConfig.dims.z; z++) {
+                draw_tile(x, z)
             }
         }
     }
+
+    return { draw_grid }
 }
 
-export { Draw }
+
