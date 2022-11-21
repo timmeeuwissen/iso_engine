@@ -6,19 +6,21 @@ import { Map } from './Map'
 import { Generic } from './Entity'
 import { tConfigTerrain } from './tConfig'
 
-const canvas:HTMLCanvasElement = document.getElementById('game_canvas') as HTMLCanvasElement;
-// const interact_strategy = new InteractMouse(canvas)
-const map = Map();
+export const RunEngine = () => {
+    const canvas:HTMLCanvasElement = document.getElementById('game_canvas') as HTMLCanvasElement;
+    // const interact_strategy = new InteractMouse(canvas)
+    const map = Map();
 
-Object.entries(entityConfig).forEach(([unique, entityConfig]) => {
-    map.entityMemory.add(Generic(entityConfig), unique)
-})
+    Object.entries(entityConfig).forEach(([unique, entityConfig]) => {
+        map.entityMemory.add(Generic(entityConfig), unique)
+    })
 
-const draw = Draw(
-    canvas, 
-    terrainConfig as tConfigTerrain, 
-    canvasConfig.width, 
-    canvasConfig.height
-)
+    const draw = Draw(
+        canvas, 
+        terrainConfig as tConfigTerrain, 
+        canvasConfig.width, 
+        canvasConfig.height
+    )
 
-// todo: execute attach interact strategy
+    // todo: execute attach interact strategy
+}

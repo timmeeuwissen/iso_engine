@@ -5,7 +5,9 @@
         "resolveJsonModule": true,
         "moduleResolution": "node",
         "target": "ES6",
-        "lib": ["ES2020"]
+        "lib": ["ES2020"],
+        "removeComments": true,
+        "outDir": "./dist"
     },
     "include": [
         "./config.json"
