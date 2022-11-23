@@ -17,7 +17,7 @@
     "typescript": "^4.9.3"
   },
   "scripts": {
-    "serve": "serve.js",
+    "serve": "node serve.js",
     "clean": "rm -fr dist",
     "build": "npm run clean && tsc --project tsconfig.json && npm run bundle:esm && npm run bundle:esm:min && npm run bundle:umd && npm run bundle:umd:min && npm run build:stats",
     "build:stats": "(echo '\\033[35;3m' ; cd dist/build && ls -lh index*js index*gz | tail -n +2 | awk '{print $5,$9}')",
