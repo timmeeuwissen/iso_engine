@@ -1,6 +1,6 @@
 // import { InteractMouse } from './interactors/Mouse' 
-import { terrain as terrainConfig, canvas as canvasConfig} from './config/config.json'
-import * as entityConfig from './config/entities/default.json'
+import { terrain as terrainConfig, canvas as canvasConfig} from '../config/config.json'
+import * as entityConfig from '../config/entities/default.json'
 import { Draw } from './Draw'
 import { Map } from './Map'
 import { Generic } from './Entity'
