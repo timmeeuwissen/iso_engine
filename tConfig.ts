@@ -11,7 +11,7 @@ type tConfigTerrain = {
     tile: {
         width: number,
         height: number,
-        line: Partial<CanvasRenderingContext2D>
+        line: CanvasRenderingContext2D
     }
 }
 

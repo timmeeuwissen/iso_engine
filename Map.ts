@@ -60,7 +60,7 @@ export const Map = () => {
     }
 
     //  when tiles are bigger, reference resolvers are introduced.
-    const set_reference = (x, z, refX, refZ) => {
+    const set_reference = (x: number, z: number, refX: number, refZ: number) => {
         set_map_record(x, z, { resolver: get_map_at , refX, refZ})
     }
 

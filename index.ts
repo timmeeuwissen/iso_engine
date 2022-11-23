@@ -6,8 +6,7 @@ import { Map } from './Map'
 import { Generic } from './Entity'
 import { tConfigTerrain } from './tConfig'
 
-export const RunEngine = () => {
-    const canvas:HTMLCanvasElement = document.getElementById('game_canvas') as HTMLCanvasElement;
+export const RunEngine = (canvas: HTMLCanvasElement) => {
     // const interact_strategy = new InteractMouse(canvas)
     const map = Map();
 

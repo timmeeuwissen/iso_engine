@@ -11,11 +11,11 @@
             You need to enable JavaScript to run this app.
         </noscript>
         <div id="app">
-            Loading...
+            <canvas id="game_canvas"></canvas>
         </div>
         <script type="module">
             import { RunEngine } from '../dist/index.mjs';
-            RunEngine();
+            RunEngine(document.getElementById('game_canvas'));
         </script>
     </body>
 </html>

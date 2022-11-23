@@ -1,4 +1,5 @@
 import { tConfigTerrain } from "./tConfig"
+import { WritableKeys } from "./tHelpers"
 import { Map } from './Map'
 
 type tTilePos = [number,number][]
@@ -15,8 +16,9 @@ export const Draw = (canvas: HTMLCanvasElement, terrainConfig: tConfigTerrain, w
     const startPos = {x: width / 2, y: height}
 
     //  draw an isometric square
-    const draw_tile = (x, z) => {
+    const draw_tile = (x: number, z:number) => {
         Object.entries(terrainConfig.tile.line).forEach(
+            // @ts-ignore: Should only figure out a couple of keys of the context, however they don't traverse well implicitly
             ([key, value]) => ctx[key] = value
         );
         
@@ -35,9 +37,10 @@ export const Draw = (canvas: HTMLCanvasElement, terrainConfig: tConfigTerrain, w
             [ctx.lineTo, 0, 1],
         ]
         
-        lineOps.reduce(
+        return lineOps.reduce(
             (acc, [cFn, iPos, lineDrew]) => { 
-                cFn.apply(tilePos[iPos]); 
+                [x, z] = tilePos[iPos];
+                cFn.call(null, x, z); 
                 acc.lines += lineDrew;
                 return acc;
             }, 
