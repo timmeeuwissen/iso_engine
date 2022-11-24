@@ -1,0 +1,6 @@
+{
+    "verbose": true,
+    "exec": "yarn build",
+    "watch": ["./src", "./config"],
+    "ext": "ts,json"
+}

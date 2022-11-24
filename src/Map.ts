@@ -1,14 +1,15 @@
 // maintains the state of the map
 
-import { tEntityReference } from "./Entity"
-import { Memory as EntityMemory } from "./Entity"
+import { tEntityReference, tEntityConfig, tEntityConfigs } from "./Entity"
+import { Memory as EntityMemory, Generic } from "./Entity"
+import { RequireKeys } from "./tHelpers"
 
 type tResolverCallback = (x: number, z: number) => tMapAt
 
-type tMapRecordEntity = {
+export type tMapRecordEntity = {
     level?: number,
-    sizeX: number,
-    sizeZ: number,
+    sizeX?: number,
+    sizeZ?: number,
     entityReference?: string
 }
 
@@ -18,9 +19,11 @@ type tMapRecordReference = {
     refZ: number
 }
 
-type tMapRecord = tMapRecordEntity | tMapRecordReference
+export type tMapConfig = {[key: number]: {[key: number]: tMapRecordEntity}}
 
-export type tMapAt = (tMapRecord & {hitRecord?: tMapRecord}) | undefined
+export type tMapRecord = tMapRecordEntity | tMapRecordReference
+
+export type tMapAt = (tMapRecordEntity & {hitRecord?: tMapRecordReference}) | undefined
 
 export const Map = () => {
     const map: {[key: number]: {[key: number]: tMapRecord}} = {};
@@ -40,19 +43,28 @@ export const Map = () => {
     const set_map_position = (
         x: number, 
         z: number, 
-        level: number | undefined, 
-        sizeX: number = 1, 
-        sizeZ: number = 1, 
-        entityReference: tEntityReference) => {
-
-        set_map_record(x, z, {level, sizeX, sizeZ, entityReference})
+        mapRec: tMapRecordEntity) => {
         
-        if (sizeX > 1 || sizeZ > 1){
+        // setting defaults
+        const mapRecReq: RequireKeys<tMapRecordEntity, 'sizeX' | 'sizeZ'> = {
+            sizeX: 1, 
+            sizeZ: 1,
+            ...mapRec
+        }
+        console.log(mapRecReq, mapRec);
+
+        set_map_record(x, z, mapRecReq)
+        
+        if (mapRecReq.sizeX > 1 || mapRecReq.sizeZ > 1){
             let xIncr: number, zIncr: number
-            for(xIncr = 0; xIncr < sizeX; xIncr++) {
-                for(zIncr = 0; zIncr < sizeZ; zIncr++) {
+            for(xIncr = 0; xIncr < mapRecReq.sizeX; xIncr++) {
+                for(zIncr = 0; zIncr < mapRecReq.sizeZ; zIncr++) {
                     if (xIncr || zIncr) {
-                        set_reference(x+xIncr, z+zIncr, x, z)
+                        set_reference(
+                            parseInt(x as unknown as string)+xIncr, 
+                            parseInt(z as unknown as string)+zIncr, 
+                            x, z
+                        )
                     }
                 }
             }
@@ -61,6 +73,7 @@ export const Map = () => {
 
     //  when tiles are bigger, reference resolvers are introduced.
     const set_reference = (x: number, z: number, refX: number, refZ: number) => {
+        console.log('setting reference', x, z, refX, refZ);
         set_map_record(x, z, { resolver: get_map_at , refX, refZ})
     }
 
@@ -80,7 +93,7 @@ export const Map = () => {
                 return { ...parentPosition, hitRecord: exactPosition }
             }
             else {
-                return exactPosition
+                return undefined
             }
         }
         else {
@@ -88,5 +101,36 @@ export const Map = () => {
         }
     }
 
-    return { set_map_position, entityMemory }
+    const load_entities = (entityConfig: tEntityConfigs) => {
+        Object.entries(entityConfig).forEach(([unique, entityConfig]) => {
+            entityMemory.add(Generic(entityConfig), unique)
+        })    
+    }
+
+    const load_map = (mapConfig: tMapConfig) => {
+        Object.entries(mapConfig).forEach(([xLoc, zPositions]) => {
+            Object.entries(zPositions).forEach(([zLoc, mapRec]) => {
+                set_map_position(
+                    xLoc as unknown as number, 
+                    zLoc as unknown as number, 
+                    mapRec
+                )
+            })
+        })
+    }
+
+    // todo : convert to an iterator
+    const iterate = (cb: (xLoc: number, zLoc: number, tMapAt: tMapAt) => void) => {
+        Object.entries(map).forEach(([xLoc, zPositions]) => {
+            Object.entries(zPositions).forEach(([zLoc]) => {
+                cb(
+                    xLoc as unknown as number,
+                    zLoc as unknown as number,
+                    get_map_at(xLoc as unknown as number, zLoc as unknown as number)
+                );
+            });
+        });
+    }
+
+    return { set_map_position, entityMemory, load_entities, load_map, iterate };
 }

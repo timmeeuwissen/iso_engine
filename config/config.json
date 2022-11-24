@@ -1,12 +1,12 @@
 {
     "canvas": {
-        "width": 100,
-        "height": 100
+        "width": 800,
+        "height": 600
     },
     "terrain": {
         "dims": {
-            "x": 50,
-            "z": 50
+            "x": 10,
+            "z": 10
         },
         "level": {
             "water": 0,
@@ -14,8 +14,7 @@
             "plane": 2
         },
         "tile": {
-            "width": 10,
-            "height": 10,
+            "width": 24,
             "line": {
                 "lineJoin": "round",
                 "lineCap": "round",

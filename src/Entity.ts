@@ -10,9 +10,10 @@ export type tEntityConfig = {
         sprite: string, 
     }
 }
+
+export type tEntityConfigs = {[key: string]: tEntityConfig}
+
 export type tEntityReference = string
-
-
 
 export const unique = (config: tEntityConfig):string => {
     return JSON.stringify(config)

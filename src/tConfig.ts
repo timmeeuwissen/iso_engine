@@ -10,7 +10,6 @@ type tConfigTerrain = {
     },
     tile: {
         width: number,
-        height: number,
         line: CanvasRenderingContext2D
     }
 }
