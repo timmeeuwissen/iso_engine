@@ -5,12 +5,13 @@
     },
     "terrain": {
         "dims": {
-            "x": 10,
-            "z": 10
+            "x": 15,
+            "z": 15
         },
         "level": {
-            "water": 0,
-            "snow": 6,
+            "bedrock": 0,
+            "water": 1,
+            "snow": 3,
             "plane": 2
         },
         "tile": {

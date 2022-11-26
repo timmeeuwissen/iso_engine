@@ -2,6 +2,7 @@
 
 import { tEntityReference, tEntityConfig, tEntityConfigs } from "./Entity"
 import { Memory as EntityMemory, Generic } from "./Entity"
+import { tConfigTerrain } from "./draw/Terrain"
 import { RequireKeys } from "./tHelpers"
 
 type tResolverCallback = (x: number, z: number) => tMapAt
@@ -16,16 +17,19 @@ export type tMapRecordEntity = {
 type tMapRecordReference = {
     resolver: tResolverCallback,
     refX: number,
-    refZ: number
+    refZ: number,
+    level?: number
 }
 
 export type tMapConfig = {[key: number]: {[key: number]: tMapRecordEntity}}
 
 export type tMapRecord = tMapRecordEntity | tMapRecordReference
 
+type tMapRecDim = RequireKeys<tMapRecordEntity, 'sizeX' | 'sizeZ'>;
+
 export type tMapAt = (tMapRecordEntity & {hitRecord?: tMapRecordReference}) | undefined
 
-export const Map = () => {
+export const Map = (terrainConfig: tConfigTerrain) => {
     const map: {[key: number]: {[key: number]: tMapRecord}} = {};
 
     const entityMemory = EntityMemory()
@@ -39,6 +43,64 @@ export const Map = () => {
         }
     }
 
+    const smoothen_height_edges = (
+            x: number, 
+            z: number, 
+            mapRecDim: tMapRecDim
+        ) => {
+        
+        if (typeof mapRecDim.level == 'undefined') return;
+
+        const depthDirection = mapRecDim.level > terrainConfig.level.plane 
+            ? -1 : 1;
+        
+        if (mapRecDim.level == terrainConfig.level.plane ||
+            mapRecDim.level + depthDirection == terrainConfig.level.plane){
+            return;
+        }
+
+        const layers = [];
+        for (let iDiff = 1, iTarg = Math.abs(terrainConfig.level.plane - mapRecDim.level); 
+            iDiff <= iTarg;
+            iDiff++){
+
+            const layer = {
+                x: x - iDiff,
+                z: z - iDiff,
+                sizeX: mapRecDim.sizeX + iDiff * 2,
+                sizeZ: mapRecDim.sizeZ + iDiff * 2,
+                level: mapRecDim.level + iDiff * depthDirection
+            }
+            
+
+            let xIncr: number, zIncr: number
+            for(xIncr = 0; xIncr < layer.sizeX; xIncr++) {
+                for(zIncr = 0; zIncr < layer.sizeZ; zIncr++) {
+                    // only the outer rim
+                    if (!xIncr || !zIncr || xIncr == layer.sizeX-1 || zIncr == layer.sizeZ-1) {
+                        // limit to the edges of the terrain
+                        const 
+                            targX = layer.x + xIncr,
+                            targZ = layer.z + zIncr;
+                        
+                        if ((targX >= 1 && targX <= terrainConfig.dims.x) &&
+                            (targZ >= 1 && targZ <= terrainConfig.dims.z)) {
+                            set_reference(
+                                layer.x + xIncr, 
+                                layer.z + zIncr, 
+                                x, z, 
+                                layer.level
+                            )
+                        }
+                    }
+                }
+            }
+                
+    
+        }
+        
+    }
+
     //  maintains properties of a tile in the map
     const set_map_position = (
         x: number, 
@@ -46,19 +108,18 @@ export const Map = () => {
         mapRec: tMapRecordEntity) => {
         
         // setting defaults
-        const mapRecReq: RequireKeys<tMapRecordEntity, 'sizeX' | 'sizeZ'> = {
+        const mapRecDim: tMapRecDim = {
             sizeX: 1, 
             sizeZ: 1,
             ...mapRec
         }
-        console.log(mapRecReq, mapRec);
 
-        set_map_record(x, z, mapRecReq)
+        set_map_record(x, z, mapRecDim)
         
-        if (mapRecReq.sizeX > 1 || mapRecReq.sizeZ > 1){
+        if (mapRecDim.sizeX > 1 || mapRecDim.sizeZ > 1){
             let xIncr: number, zIncr: number
-            for(xIncr = 0; xIncr < mapRecReq.sizeX; xIncr++) {
-                for(zIncr = 0; zIncr < mapRecReq.sizeZ; zIncr++) {
+            for(xIncr = 0; xIncr < mapRecDim.sizeX; xIncr++) {
+                for(zIncr = 0; zIncr < mapRecDim.sizeZ; zIncr++) {
                     if (xIncr || zIncr) {
                         set_reference(
                             parseInt(x as unknown as string)+xIncr, 
@@ -69,12 +130,13 @@ export const Map = () => {
                 }
             }
         }
+
+        smoothen_height_edges(x, z, mapRecDim);
     }
 
     //  when tiles are bigger, reference resolvers are introduced.
-    const set_reference = (x: number, z: number, refX: number, refZ: number) => {
-        console.log('setting reference', x, z, refX, refZ);
-        set_map_record(x, z, { resolver: get_map_at , refX, refZ})
+    const set_reference = (x: number, z: number, refX: number, refZ: number, level?: number) => {
+        set_map_record(x, z, { resolver: get_map_at , refX, refZ, level})
     }
 
     // gets the item on a map, even if it is part of an earlier, bigger structure.
@@ -90,7 +152,11 @@ export const Map = () => {
         if('resolver' in exactPosition){
             const parentPosition: tMapAt = exactPosition.resolver(exactPosition.refX, exactPosition.refZ)
             if (parentPosition){
-                return { ...parentPosition, hitRecord: exactPosition }
+                return { 
+                    ...parentPosition, 
+                    hitRecord: exactPosition, 
+                    level: typeof exactPosition.level == 'undefined'  ? parentPosition.level : exactPosition.level
+                };
             }
             else {
                 return undefined
@@ -111,8 +177,8 @@ export const Map = () => {
         Object.entries(mapConfig).forEach(([xLoc, zPositions]) => {
             Object.entries(zPositions).forEach(([zLoc, mapRec]) => {
                 set_map_position(
-                    xLoc as unknown as number, 
-                    zLoc as unknown as number, 
+                    parseInt(xLoc), 
+                    parseInt(zLoc), 
                     mapRec
                 )
             })
@@ -132,5 +198,5 @@ export const Map = () => {
         });
     }
 
-    return { set_map_position, entityMemory, load_entities, load_map, iterate };
+    return { set_map_position, entityMemory, load_entities, load_map, iterate, get_map_at };
 }

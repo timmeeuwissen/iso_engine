@@ -1,18 +1,4 @@
-type tConfigTerrain = {
-    dims: {
-        x: number,
-        z: number
-    },
-    level: {
-        water: number,
-        snow: number,
-        plane: number
-    },
-    tile: {
-        width: number,
-        line: CanvasRenderingContext2D
-    }
-}
+import { tConfigTerrain } from "./draw/Terrain"
 
 type tConfigCanvas = {
     width: number,
@@ -25,4 +11,4 @@ type tConfig = {
     terrain: tConfigTerrain
 }
 
-export { tConfig, tConfigCanvas, tConfigTerrain }
+export { tConfig, tConfigCanvas }
