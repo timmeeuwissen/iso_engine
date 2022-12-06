@@ -42,7 +42,9 @@ export const Draw = (
     // todo ; cache higher than here
     const draw = () => {
         drawables.forEach(drawable => {
+            ctx.save();
             drawable(terrainConfig, map, mapCoords, ctx, terrain).draw()
+            ctx.restore();
         })
     }
 
