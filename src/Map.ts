@@ -107,10 +107,22 @@ export const Map = (terrainConfig: tConfigTerrain) => {
         z: number, 
         mapRec: tMapRecordEntity) => {
         
-        // setting defaults
-        const mapRecDim: tMapRecDim = {
+        let defaults = {
             sizeX: 1, 
             sizeZ: 1,
+        };
+
+        if(mapRec.entityReference) {
+            const entityRef = entityMemory.get(mapRec.entityReference);
+            if (entityRef) {
+                if (entityRef.tile?.sizeX) { defaults.sizeX = entityRef.tile.sizeX}
+                if (entityRef.tile?.sizeZ) { defaults.sizeX = entityRef.tile.sizeZ}
+            }
+        }
+
+        // setting defaults
+        const mapRecDim: tMapRecDim = {
+            ...defaults,
             ...mapRec
         }
 
@@ -169,7 +181,7 @@ export const Map = (terrainConfig: tConfigTerrain) => {
 
     const load_entities = (entityConfig: tEntityConfigs) => {
         Object.entries(entityConfig).forEach(([unique, entityConfig]) => {
-            entityMemory.add(Generic(entityConfig), unique)
+            entityMemory.add(entityConfig, unique)
         })    
     }
 
@@ -186,9 +198,11 @@ export const Map = (terrainConfig: tConfigTerrain) => {
     }
 
     // todo : convert to an iterator
-    const iterate = (cb: (xLoc: number, zLoc: number, tMapAt: tMapAt) => void) => {
-        Object.entries(map).forEach(([xLoc, zPositions]) => {
-            Object.entries(zPositions).forEach(([zLoc]) => {
+    const iterate = (cb: (xLoc: number, zLoc: number, tMapAt: tMapAt) => void, reverse = false) => {
+        const row = reverse ? Object.entries(map).reverse() : Object.entries(map);
+        row.forEach(([xLoc, zPositions]) => {
+            const col = reverse ? Object.entries(zPositions).reverse() : Object.entries(zPositions);
+            col.forEach(([zLoc]) => {
                 cb(
                     xLoc as unknown as number,
                     zLoc as unknown as number,

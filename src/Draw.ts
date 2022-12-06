@@ -1,8 +1,22 @@
 import { tConfigTerrain } from "./draw/Terrain"
+import { Memory, tEntity } from "./Entity"
 import { Map as WorldMap, tMapAt } from './Map'
 
 type tCoord = [number,number] 
-type tTileCoords = {bottom: tCoord, right: tCoord, top: tCoord, left: tCoord}
+type tTileCoords = {
+    unslanted: {
+        bottom: tCoord, 
+        right: tCoord, 
+        top: tCoord, 
+        left: tCoord
+    },
+    slanted: {
+        bottom: tCoord, 
+        right: tCoord, 
+        top: tCoord, 
+        left: tCoord
+    }
+}
 type tMapCoords = {[key: number]: {[key: number]: tTileCoords}}
 
 export const Draw = (
@@ -47,11 +61,11 @@ export const Draw = (
 
     const draw_tile_surface = (coords: tTileCoords, mapRec: tMapAt) => {
         ctx.beginPath();
-        ctx.moveTo(coords.bottom[0], coords.bottom[1]-1);
-        ctx.lineTo(coords.right[0]-1, coords.right[1]);
-        ctx.lineTo(coords.top[0], coords.top[1]+1);
-        ctx.lineTo(coords.left[0]+1, coords.left[1]);
-        ctx.lineTo(coords.bottom[0], coords.bottom[1]-1);
+        ctx.moveTo(coords.slanted.bottom[0], coords.slanted.bottom[1]-1);
+        ctx.lineTo(coords.slanted.right[0]-1, coords.slanted.right[1]);
+        ctx.lineTo(coords.slanted.top[0], coords.slanted.top[1]+1);
+        ctx.lineTo(coords.slanted.left[0]+1, coords.slanted.left[1]);
+        ctx.lineTo(coords.slanted.bottom[0], coords.slanted.bottom[1]-1);
         ctx.closePath();
         ctx.fillStyle = "#55ff55"
         ctx.fill()
@@ -78,35 +92,50 @@ export const Draw = (
         );
 
         const 
-            levelDelta = (mapRec && typeof mapRec.level != 'undefined' ? mapRec.level : terrainConfig.level.plane) * 0.5 * tileDraw.y,
+            levelDelta = ((mapRec && typeof mapRec.level != 'undefined' ? mapRec.level : terrainConfig.level.plane)) * 0.5 * tileDraw.y,
             startX = startPos.x + ((0.5 * (x-1) * tileDraw.x) - (0.5 * (z-1) * tileDraw.x)),
-            startY = startPos.y - ((0.5 * (x-1) * tileDraw.y) + (0.5 * (z-1) * tileDraw.y)) - levelDelta;
+            startY = startPos.y - ((0.5 * (x-1) * tileDraw.y) + (0.5 * (z-1) * tileDraw.y)) - levelDelta - tileDraw.y;
         
+        const unslanted: { 
+            bottom: tCoord, 
+            right: tCoord, 
+            top: tCoord, 
+            left: tCoord
+        } = {
+            bottom: [startX, startY],
+            right: [startX + 0.5 * tileDraw.x, startY - 0.5 * tileDraw.y],
+            top: [startX, startY - tileDraw.y],
+            left: [startX - 0.5 * tileDraw.x, startY - 0.5 * tileDraw.y]
+        }
+
         const coords:tTileCoords = {
-            bottom: 
-                get_map_coord(x, z-1)?.left || 
-                get_map_coord(x-1, z)?.right || 
-                [startX, startY],
-            right:  
-                get_map_coord(x+1, z)?.bottom || 
-                get_map_coord(x, z-1)?.top || 
-                [startX + 0.5 * tileDraw.x, startY - 0.5 * tileDraw.y],
-            top:    
-                get_map_coord(x+1, z)?.left || 
-                get_map_coord(x, z+1)?.right ||
-                get_map_coord(x+1, z+1)?.bottom ||
-                [startX, startY - tileDraw.y],
-            left:   
-                get_map_coord(x-1, z)?.top || 
-                get_map_coord(x, z+1)?.bottom ||
-                [startX - 0.5 * tileDraw.x, startY - 0.5 * tileDraw.y]
+            unslanted,
+            slanted: {
+                bottom: 
+                    get_map_coord(x, z-1)?.slanted.left || 
+                    get_map_coord(x-1, z)?.slanted.right || 
+                    unslanted.bottom,
+                right:  
+                    get_map_coord(x+1, z)?.slanted.bottom || 
+                    get_map_coord(x, z-1)?.slanted.top || 
+                    unslanted.right,
+                top:    
+                    get_map_coord(x+1, z)?.slanted.left || 
+                    get_map_coord(x, z+1)?.slanted.right ||
+                    get_map_coord(x+1, z+1)?.slanted.bottom ||
+                    unslanted.top,
+                left:   
+                    get_map_coord(x-1, z)?.slanted.top || 
+                    get_map_coord(x, z+1)?.slanted.bottom ||
+                    unslanted.left
+            }
         }
         
         store_map_coords(x, z, coords);
         const lines = [];
-        if (z == 1) lines.push(coords.bottom)
-        lines.push(coords.right, coords.top, coords.left);
-        if(lines.length == 4 || x == 1) lines.push(coords.bottom);
+        if (z == 1) lines.push(coords.slanted.bottom)
+        lines.push(coords.slanted.right, coords.slanted.top, coords.slanted.left);
+        if(lines.length == 4 || x == 1) lines.push(coords.slanted.bottom);
         draw_lines(lines);
 
         draw_tile_surface(coords, mapRec);
@@ -137,13 +166,13 @@ export const Draw = (
                     acc.push({
                         x: tuple[0] as unknown as number, 
                         y: 1,
-                        point:tuple[1][1].bottom
+                        point:tuple[1][1].slanted.bottom
                     });
                     if (tuple[0] == terrainConfig.dims.x.toString()) {
                         acc.push({
                             x: tuple[0] as unknown as number, 
                             y: 1,
-                            point:tuple[1][1].right
+                            point:tuple[1][1].slanted.right
                         });
                     }
                     return acc;
@@ -155,13 +184,13 @@ export const Draw = (
                     acc.push({
                         x: 1, 
                         y: parseInt(tuple[0] as unknown as string),
-                        point: tuple[1].bottom
+                        point: tuple[1].slanted.bottom
                     }); 
                     if (tuple[0] == terrainConfig.dims.z.toString()) {
                         acc.push({
                             x: 1, 
                             y: parseInt(tuple[0] as unknown as string),
-                            point: tuple[1].left
+                            point: tuple[1].slanted.left
                         });     
                     }                    
                     return acc;
@@ -195,10 +224,121 @@ export const Draw = (
         })
     }
 
+    const draw_water = () => {
+        const waterLevel = terrainConfig.level.water;
+        let lakePoints: tCoord[] = [];
+
+        map.iterate((xLoc, zLoc, mapAt) => {
+            if (typeof mapAt?.level == "undefined" || mapAt.level > waterLevel) {
+                return;
+            }
+            // check if any of the edges dips underwater
+            const coords = mapCoords[xLoc][zLoc],
+                relativePosition = Object.entries(coords.slanted).reduce((acc, [coordKey, value]) => {
+                        const unslantedCoord: tCoord = coords.unslanted[coordKey as 'bottom' | 'left' | 'right' | 'top'];
+                        if (value[1] > unslantedCoord[1] ) {
+                            acc.below.push(value);
+                        }
+                        else if (value[0] == unslantedCoord[0] && value[1] == unslantedCoord[1]) {
+                            acc.waterline.push(value);
+                        }
+                        return acc;
+                    },
+                    {
+                        waterline: [] as tCoord[],
+                        below: [] as tCoord[]
+                    }
+                );
+            
+            if (relativePosition.waterline.length && relativePosition.below.length) {
+                lakePoints = [...lakePoints, ...relativePosition.waterline]
+            }
+        });
+
+        lakePoints.sort((coordA, coordB) =>{
+            return Math.atan2(coordA[1], coordA[0]) > Math.atan2(coordB[1], coordB[0]) ? 1 : 0
+        })
+
+        draw_lines(lakePoints)
+        ctx.globalAlpha = 0.5
+        ctx.fillStyle = '#00f'
+        ctx.fill()
+        ctx.globalAlpha = 1
+        // how in the hell will we sort this mess to become a circle.
+    }
+
+    // todo ; cache higher than here
+    const images: {[key: string]: Promise<HTMLImageElement>} = {}
+    const load_image = (src: string): Promise<HTMLImageElement> => {
+        if (!(src in images)) {
+            images[src] = new Promise((resolve, reject) => {
+                let img = new Image()
+                img.onload = () => resolve(img)
+                img.onerror = reject
+                img.src = `assets/${src}`
+              });
+        }
+
+        return images[src]
+      }
+      
+    const draw_entities = () => {
+        map.iterate((xLoc, zLoc, mapAt) => {
+            if (!mapAt?.entityReference) {
+                return;
+            }
+
+            const entity = map.entityMemory.get(mapAt.entityReference);
+            if (!entity) {
+                return;
+            }
+            // TODO: cache sprite definition
+            if (entity.object?.sprite) {
+
+                const coords = get_map_coord(xLoc, zLoc);
+                if (!coords ) {
+                    return;
+                }
+
+                load_image(entity.object.sprite).then((img) => {
+                    if (!entity.object) {
+                        return;
+                    }
+
+                    let drawCoord = coords.slanted.bottom;
+                    // if (entity.object.drawPos) {
+                    //     if(entity.object.drawPos in coords.slanted) {
+                    //         drawCoord = coords.slanted[entity.object.drawPos as str in tEntityConfig]
+                    //     }
+                    // }
+
+                    // TODO: positioning based on drawPos prop
+                    ctx.drawImage(
+                        img,
+                        // position in sprite
+                        entity.object.xPos,
+                        entity.object.yPos - entity.object.height,
+                        // size of graphic in sprite
+                        entity.object.width,
+                        entity.object.height,
+                        // draw position
+                        drawCoord[0] - entity.object.width / 2,
+                        drawCoord[1] - entity.object.height,
+                        // draw dimensions
+                        entity.object.width,
+                        entity.object.height
+                    )              
+                });
+            }
+        }, true);
+    }
+
     const draw = () => {
         draw_map();
         draw_grid();
         draw_earth();
+        draw_water();
+        draw_entities();
     }
 
     return { draw }

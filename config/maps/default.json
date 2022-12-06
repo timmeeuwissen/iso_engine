@@ -6,19 +6,27 @@
     },
     "3": {
         "3": {
-            "level": 3
+            "level": 3,
+            "entityReference": "tree_1"
+        }
+    },
+    "4": {
+        "6": {
+            "entityReference": "tree_2"
         }
     },
     "6": {
         "6": {
-            "level": 1,
+            "level": 2,
             "sizeZ": 2,
             "sizeX": 2
         }
     },
     "10": {
         "1": {
-            "level": 5
+            "level": 5,
+            "sizeX": 2,
+            "sizeZ": 2
         },
         "10": {
             "level": 5,

@@ -3,11 +3,18 @@ export type tEntity = {
 }
 
 export type tEntityConfig = {
-    ground?: {
+    tile?: {
         texture?: string,
+        sizeX: number,
+        sizeZ: number
     },
     object?: {
         sprite: string, 
+        xPos: number,
+        yPos: number,
+        width: number,
+        height: number,
+        drawPos: 'bottom' | 'right' | 'top' | 'left' | 'middle' 
     }
 }
 
@@ -24,21 +31,21 @@ export const Generic = (config: tEntityConfig) => {
 }
 
 export const Memory = () => {
-    const entities: {[key: tEntityReference]: tEntity} = {}
+    const entities: {[key: tEntityReference]: tEntityConfig} = {}
     
-    function add(entity: tEntity, entityReference?: tEntityReference): string {
-        let unique: tEntityReference = entity.get_unique?.() || entityReference || Math.random().toString()
+    function add(entity: tEntityConfig, entityReference?: tEntityReference): string {
+        let unique: tEntityReference = entityReference || Math.random().toString()
         if (!(unique in entities)){
             entities[unique] = entity
         }
         return unique
     }
     
-    function get(unique: string): tEntity {
+    function get(unique: string): tEntityConfig  {
         if (!(unique in entities)){
             throw new Error(`Unique:${ unique } not available in EntityMemory`)
         }
-        return entities[unique]
+        return entities[unique];
     }
 
     return {add, get}
