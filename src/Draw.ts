@@ -1,11 +1,10 @@
 import { tConfigTerrain, Terrain } from "./draw/Terrain"
-import { Memory, tEntity } from "./Entity"
 import { Map as WorldMap, tMapAt } from './Map'
 import { Earth as EarthDrawable } from './draw/terrain/Earth'
 import { Entities as EntitiesDrawable } from './draw/terrain/Entities'
 import { Grid as GridDrawable } from './draw/terrain/Grid'
-import { Map as MapDrawable } from './draw/terrain/Map'
 import { Water as WaterDrawable } from './draw/terrain/Water'
+import { Map as MapDrawable } from './draw/terrain/Map'
 import { MapCoords } from "./draw/MapCoords"
 
 export type tDrawable = (
@@ -15,7 +14,6 @@ export type tDrawable = (
     ctx: CanvasRenderingContext2D,
     terrain: ReturnType<typeof Terrain>
 ) => { draw: () => void}
-
 
 export const Draw = (
     canvas: HTMLCanvasElement, 

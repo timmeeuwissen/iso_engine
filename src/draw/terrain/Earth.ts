@@ -47,8 +47,8 @@ export const Earth: tDrawable = (terrainConfig, map, mapCoords, ctx, terrain) =>
             const earthPoints: tCoord[] = edges.reduce((acc, edge) => {  return [...acc, edge.point] }, [] as tCoord[]);
             // the right side
             const 
-                firstTile = map.get_map_at(edges[0].x, edges[0].y),
-                lastTile = map.get_map_at(edges[edges.length-1].x, edges[edges.length-1].y),
+                firstTile = map.get(edges[0].x, edges[0].y),
+                lastTile = map.get(edges[edges.length-1].x, edges[edges.length-1].y),
                 lastCoords = edges[edges.length-1];
             earthPoints.push(
                 [   lastCoords.point[0],

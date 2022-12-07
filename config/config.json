@@ -11,8 +11,9 @@
         "level": {
             "bedrock": 0,
             "water": 1,
-            "snow": 3,
-            "plane": 2
+            "plane": 2,
+            "hill": 3,
+            "snow": 5
         },
         "tile": {
             "width": 24,
@@ -22,6 +23,28 @@
                 "strokeStyle": "#000",
                 "lineWidth": 1
             }
-        }
+        },
+        "ground": [
+            {
+                "threshold": "bedrock",
+                "color": "#ccc"
+            },
+            {
+                "threshold": "water",
+                "color": "#964B00"
+            },
+            {
+                "threshold": "plane",
+                "color": "#5f5"
+            },
+            {
+                "threshold": "hill",
+                "color": "#5f5"
+            },
+            {
+                "threshold": "snow",
+                "color": "#fff"
+            }
+        ]
     }
 }

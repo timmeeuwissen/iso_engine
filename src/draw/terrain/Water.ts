@@ -16,8 +16,12 @@ export const Water: tDrawable = (terrainConfig, map, mapCoords, ctx, terrain) =>
             const coords = mapCoords.getAll()[xLoc][zLoc],
                 relativePosition = Object.entries(coords.slanted).reduce((acc, [coordKey, value]) => {
                     const unslantedCoord: tCoord = coords.unslanted[coordKey as 'bottom' | 'left' | 'right' | 'top'];
-                    if (value[1] > unslantedCoord[1] ) {
+                    if (xLoc==3) {
+                        console.log(xLoc, zLoc, coords)
+                    }
+                    if (value[1] != unslantedCoord[1] ) {
                         acc.below.push(value);
+                        console.log(xLoc, zLoc, coordKey, 'slanted is bigger than unslanted')
                     }
                     else if (value[0] == unslantedCoord[0] && value[1] == unslantedCoord[1]) {
                         acc.waterline.push(value);
@@ -34,12 +38,14 @@ export const Water: tDrawable = (terrainConfig, map, mapCoords, ctx, terrain) =>
                 lakePoints = [...lakePoints, ...relativePosition.waterline]
             }
         });
-
-        lakePoints.sort((coordA, coordB) =>{
+        const sortedLakepoints = lakePoints.sort((coordA, coordB) =>{
             return Math.atan2(coordA[1], coordA[0]) > Math.atan2(coordB[1], coordB[0]) ? 1 : 0
         })
 
-        terrain.draw_lines(lakePoints)
+        
+        console.log('lakepoints', sortedLakepoints);
+
+        terrain.draw_lines(sortedLakepoints)
         ctx.globalAlpha = 0.5
         ctx.fillStyle = '#00f'
         ctx.fill()

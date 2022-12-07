@@ -4,6 +4,7 @@ import { tEntityReference, tEntityConfig, tEntityConfigs } from "./Entity"
 import { Memory as EntityMemory, Generic } from "./Entity"
 import { tConfigTerrain } from "./draw/Terrain"
 import { RequireKeys } from "./tHelpers"
+import { ObjectType } from "typescript"
 
 type tResolverCallback = (x: number, z: number) => tMapAt
 
@@ -11,14 +12,27 @@ export type tMapRecordEntity = {
     level?: number,
     sizeX?: number,
     sizeZ?: number,
-    entityReference?: string
+    entityReference?: string,
+    type?: eRecType
 }
 
 type tMapRecordReference = {
     resolver: tResolverCallback,
     refX: number,
     refZ: number,
-    level?: number
+    level?: number,
+    type?: eRecType
+}
+
+type tCoordTuple = [number, number];
+
+export type tIterateCB = (xLoc: number, zLoc: number, tMapAt: tMapAt, recType: eRecType) => void;
+
+export enum eRecType {
+    config,
+    filler,
+    slope,
+    other,
 }
 
 export type tMapConfig = {[key: number]: {[key: number]: tMapRecordEntity}}
@@ -31,16 +45,29 @@ export type tMapAt = (tMapRecordEntity & {hitRecord?: tMapRecordReference}) | un
 
 export const Map = (terrainConfig: tConfigTerrain) => {
     const map: {[key: number]: {[key: number]: tMapRecord}} = {};
+    const typeOptimized: {[key in eRecType]?: tCoordTuple[]} = {};
 
     const entityMemory = EntityMemory()
 
-    const set_map_record = (x: number, z: number, record: tMapRecord) => {
+    const set = (x: number, z: number, record: tMapRecord, recType?: eRecType) => {
+        const optimizeKey = typeof recType != 'undefined' ? recType : eRecType.other;
+        
         if (!(x in map)) {
             map[x] = {}
         }
         if (!(z in map[x])) {
-            map[x][z] = record
+            map[x][z] = {...record, type: recType}
+        } 
+        else {
+            console.error('record was already set');
+            return;
         }
+
+
+        if (typeof typeOptimized[optimizeKey] == 'undefined') {
+            typeOptimized[optimizeKey] = []
+        }
+        (typeOptimized[optimizeKey] as tCoordTuple[]).push([x, z]);
     }
 
     const smoothen_height_edges = (
@@ -89,6 +116,7 @@ export const Map = (terrainConfig: tConfigTerrain) => {
                                 layer.x + xIncr, 
                                 layer.z + zIncr, 
                                 x, z, 
+                                eRecType.slope,
                                 layer.level
                             )
                         }
@@ -102,10 +130,11 @@ export const Map = (terrainConfig: tConfigTerrain) => {
     }
 
     //  maintains properties of a tile in the map
-    const set_map_position = (
+    const generate_implications = (
         x: number, 
         z: number, 
-        mapRec: tMapRecordEntity) => {
+        mapRec: tMapRecordEntity,
+        recType?: eRecType) => {
         
         let defaults = {
             sizeX: 1, 
@@ -126,7 +155,7 @@ export const Map = (terrainConfig: tConfigTerrain) => {
             ...mapRec
         }
 
-        set_map_record(x, z, mapRecDim)
+        set(x, z, mapRecDim, recType)
         
         if (mapRecDim.sizeX > 1 || mapRecDim.sizeZ > 1){
             let xIncr: number, zIncr: number
@@ -136,7 +165,8 @@ export const Map = (terrainConfig: tConfigTerrain) => {
                         set_reference(
                             parseInt(x as unknown as string)+xIncr, 
                             parseInt(z as unknown as string)+zIncr, 
-                            x, z
+                            x, z,
+                            eRecType.filler
                         )
                     }
                 }
@@ -147,13 +177,13 @@ export const Map = (terrainConfig: tConfigTerrain) => {
     }
 
     //  when tiles are bigger, reference resolvers are introduced.
-    const set_reference = (x: number, z: number, refX: number, refZ: number, level?: number) => {
-        set_map_record(x, z, { resolver: get_map_at , refX, refZ, level})
+    const set_reference = (x: number, z: number, refX: number, refZ: number, recType?: eRecType, level?: number) => {
+        set(x, z, { resolver: get , refX, refZ, level}, recType)
     }
 
     // gets the item on a map, even if it is part of an earlier, bigger structure.
     // when that is the case you get where your exact hit was, but also obtain the higher structure.
-    const get_map_at = (x: number, z: number): tMapAt => {
+    const get = (x: number, z: number): tMapAt => {
         const exactPosition: tMapRecord | undefined = map[x]?.[z]
         
         if (!exactPosition) {
@@ -167,7 +197,8 @@ export const Map = (terrainConfig: tConfigTerrain) => {
                 return { 
                     ...parentPosition, 
                     hitRecord: exactPosition, 
-                    level: typeof exactPosition.level == 'undefined'  ? parentPosition.level : exactPosition.level
+                    level: typeof exactPosition.level == 'undefined'  ? parentPosition.level : exactPosition.level,
+                    type: typeof exactPosition.type == 'undefined'  ? parentPosition.type : exactPosition.type
                 };
             }
             else {
@@ -188,29 +219,37 @@ export const Map = (terrainConfig: tConfigTerrain) => {
     const load_map = (mapConfig: tMapConfig) => {
         Object.entries(mapConfig).forEach(([xLoc, zPositions]) => {
             Object.entries(zPositions).forEach(([zLoc, mapRec]) => {
-                set_map_position(
+                generate_implications(
                     parseInt(xLoc), 
                     parseInt(zLoc), 
-                    mapRec
+                    mapRec,
+                    eRecType.config
                 )
             })
         })
     }
 
     // todo : convert to an iterator
-    const iterate = (cb: (xLoc: number, zLoc: number, tMapAt: tMapAt) => void, reverse = false) => {
-        const row = reverse ? Object.entries(map).reverse() : Object.entries(map);
-        row.forEach(([xLoc, zPositions]) => {
-            const col = reverse ? Object.entries(zPositions).reverse() : Object.entries(zPositions);
-            col.forEach(([zLoc]) => {
-                cb(
-                    xLoc as unknown as number,
-                    zLoc as unknown as number,
-                    get_map_at(xLoc as unknown as number, zLoc as unknown as number)
-                );
-            });
-        });
+    const iterate = (cb: tIterateCB, reverse = false) => {
+        // because of order and absence of order in object
+        (Object.values(eRecType) as unknown as eRecType[]).forEach((recType: eRecType, index) => {
+            if (!typeOptimized[recType]) {
+                return;
+            }
+            
+            (reverse 
+                ? (typeOptimized[recType] as tCoordTuple[]).reverse() 
+                : (typeOptimized[recType] as tCoordTuple[]))
+                .forEach((coordTuple) => {
+                    cb(
+                        coordTuple[0], 
+                        coordTuple[1], 
+                        get(coordTuple[0], coordTuple[1]),
+                        recType
+                    )
+                }) 
+        })
     }
 
-    return { set_map_position, entityMemory, load_entities, load_map, iterate, get_map_at };
+    return { generate_implications, entityMemory, load_entities, load_map, iterate, get };
 }

@@ -1,5 +1,5 @@
 import { MapCoords, tCoord, tTileCoords } from "./MapCoords"
-import { tMapAt } from "../Map"
+import { eRecType, tMapAt } from "../Map"
 
 export type tConfigTerrain = {
     dims: {
@@ -15,8 +15,15 @@ export type tConfigTerrain = {
     tile: {
         width: number,
         line: CanvasRenderingContext2D
-    }
+    },
+    ground: [
+        {
+            threshold: keyof tConfigTerrain["level"],
+            color: string
+        }
+    ]
 }
+
 
 export const Terrain = (
     ctx: CanvasRenderingContext2D, 
@@ -34,6 +41,7 @@ export const Terrain = (
     const startPos = {x: width / 2, y: height}
     
     const draw_tile_surface = (coords: tTileCoords, mapRec: tMapAt) => {
+        ctx.save();
         ctx.beginPath();
         ctx.moveTo(coords.slanted.bottom[0], coords.slanted.bottom[1]-1);
         ctx.lineTo(coords.slanted.right[0]-1, coords.slanted.right[1]);
@@ -41,34 +49,47 @@ export const Terrain = (
         ctx.lineTo(coords.slanted.left[0]+1, coords.slanted.left[1]);
         ctx.lineTo(coords.slanted.bottom[0], coords.slanted.bottom[1]-1);
         ctx.closePath();
-        ctx.fillStyle = "#55ff55"
-        ctx.fill()
+
+        terrainConfig.ground.find((ground) => {
+            if ((typeof mapRec?.level != 'undefined' ? mapRec.level : terrainConfig.level.plane) <= terrainConfig.level[ground.threshold]) {
+                ctx.fillStyle = ground.color;
+                return true;
+            }
+        });
+
+        ctx.fill();
+        ctx.restore();
     }
 
     const draw_lines = (coords: tCoord[]) => {
         ctx.save();
         coords.forEach((point, index) => {
-             if (!point) return 
+            if (!point) return 
+
+            let [pointX, pointY] = point;
+            if (index === 0) {
+                ctx.beginPath();
+                ctx.moveTo(pointX, pointY);
+            }
+            else {
+                ctx.lineTo(pointX, pointY)
+            }
+            
+            if (index === coords.length-1) {
+                // ctx.closePath();
+                ctx.stroke();
+            }
+        });
+        ctx.restore();
+    };
     
-             let [pointX, pointY] = point;
-             if (index === 0) {
-                 ctx.beginPath();
-                 ctx.moveTo(pointX, pointY);
-             }
-             else {
-                 ctx.lineTo(pointX, pointY)
-             }
-             
-             if (index === coords.length-1) {
-                 // ctx.closePath();
-                 ctx.stroke();
-             }
-         });
-         ctx.restore();
-     };
-    
-        //  draw an isometric square
-    const draw_tile = (x: number, z:number, mapRec?: tMapAt) => {
+
+    const get_tileCoords = (x: number, z:number, mapRec?: tMapAt) => {
+        const storedCoords = mapCoords.get(x,z);
+        if (storedCoords) {
+            return storedCoords;
+        }
+
         Object.entries(terrainConfig.tile.line).forEach(
             // @ts-ignore: Should only figure out a couple of keys of the context, however they don't traverse well implicitly
             ([key, value]) => ctx[key] = value
@@ -114,7 +135,18 @@ export const Terrain = (
             }
         }
         
+        if (typeof mapRec?.type != 'undefined' && (mapRec.type in [eRecType.config, eRecType.filler])) {
+            coords.slanted = coords.unslanted
+        }
+        
         mapCoords.set(x, z, coords);
+        return coords;
+    }
+
+        //  draw an isometric square
+    const draw_tile = (x: number, z:number, mapRec?: tMapAt) => {
+        const coords = get_tileCoords(x, z, mapRec);
+        
         const lines = [];
         if (z == 1) lines.push(coords.slanted.bottom)
         lines.push(coords.slanted.right, coords.slanted.top, coords.slanted.left);
