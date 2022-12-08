@@ -1,11 +1,14 @@
 {
+    "1": {
+        "11": {
+            "level": 0,
+            "sizeX": 3
+        }
+    },
     "3": {
         "3": {
             "level": 3,
             "entityReference": "tree_1"
-        },
-        "11": {
-            "level": 0
         }
     },
     "4": {

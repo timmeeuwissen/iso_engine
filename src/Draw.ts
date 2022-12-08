@@ -4,8 +4,9 @@ import { Earth as EarthDrawable } from './draw/terrain/Earth'
 import { Entities as EntitiesDrawable } from './draw/terrain/Entities'
 import { Grid as GridDrawable } from './draw/terrain/Grid'
 import { Water as WaterDrawable } from './draw/terrain/Water'
+import { Ocean as OceanDrawable } from './draw/terrain/Ocean'
 import { Map as MapDrawable } from './draw/terrain/Map'
-import { MapCoords } from "./draw/MapCoords"
+import { MapCoords, tCoord } from "./draw/MapCoords"
 
 export type tDrawable = (
     terrainConfig: tConfigTerrain, 
@@ -13,7 +14,9 @@ export type tDrawable = (
     mapCoords: ReturnType<typeof MapCoords>,
     ctx: CanvasRenderingContext2D,
     terrain: ReturnType<typeof Terrain>
-) => { draw: () => void}
+) => { draw_all: () => void }
+
+export type tDrawPoints = { draw: (points: tCoord[]) => void }
 
 export const Draw = (
     canvas: HTMLCanvasElement, 
@@ -34,6 +37,7 @@ export const Draw = (
         GridDrawable,
         EarthDrawable,
         WaterDrawable,
+        OceanDrawable,
         EntitiesDrawable,
     ];
 
@@ -41,7 +45,7 @@ export const Draw = (
     const draw = () => {
         drawables.forEach(drawable => {
             ctx.save();
-            drawable(terrainConfig, map, mapCoords, ctx, terrain).draw()
+            drawable(terrainConfig, map, mapCoords, ctx, terrain).draw_all()
             ctx.restore();
         })
     }

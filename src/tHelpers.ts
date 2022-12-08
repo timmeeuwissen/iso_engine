@@ -10,5 +10,4 @@ export type ReadonlyKeys<T> = {
   [P in keyof T]-?: IfEquals<{ [Q in P]: T[P] }, { -readonly [Q in P]: T[P] }, never, P>
 }[keyof T];
 
-export type RequireKeys<T, K extends keyof T> = T & { [P in K]-?: T[P]; }
-
+export type RequireKeys<T, K extends keyof T> = T & { [P in K]-?: T[P]; };

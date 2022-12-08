@@ -4,7 +4,7 @@ import { Map as WorldMap, tMapAt } from '../../Map';
 
 export const Grid: tDrawable = (terrainConfig, map, mapCoords, ctx, terrain) => {    
 
-    const draw = () => {
+    const draw_all = () => {
         let x:number, z:number
         for (x = 1; x <= terrainConfig.dims.x; x++) {
             for (z = 1; z <= terrainConfig.dims.z; z++) {
@@ -16,5 +16,5 @@ export const Grid: tDrawable = (terrainConfig, map, mapCoords, ctx, terrain) => 
     }
 
 
-    return { draw }
+    return { draw_all }
 }

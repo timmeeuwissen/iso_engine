@@ -1,4 +1,6 @@
 import { tDrawable } from "../../Draw";
+import { tEntity, tEntityConfig } from "../../Entity";
+import { tCoord, tMapCoords, tTileCoords } from "../MapCoords";
 
 export const Entities: tDrawable = (terrainConfig, map, mapCoords, ctx, terrain) => {       
 
@@ -16,7 +18,7 @@ export const Entities: tDrawable = (terrainConfig, map, mapCoords, ctx, terrain)
         return images[src]
     }
         
-    const draw = () => {
+    const draw_all = () => {
         map.iterate((xLoc, zLoc, mapAt) => {
             if (!mapAt?.entityReference) {
                 return;
@@ -34,38 +36,45 @@ export const Entities: tDrawable = (terrainConfig, map, mapCoords, ctx, terrain)
                     return;
                 }
 
-                load_image(entity.object.sprite).then((img) => {
-                    if (!entity.object) {
-                        return;
-                    }
+                draw(coords, entity.object);
 
-                    let drawCoord = coords.slanted.bottom;
-                    // if (entity.object.drawPos) {
-                    //     if(entity.object.drawPos in coords.slanted) {
-                    //         drawCoord = coords.slanted[entity.object.drawPos as str in tEntityConfig]
-                    //     }
-                    // }
-
-                    // TODO: positioning based on drawPos prop
-                    ctx.drawImage(
-                        img,
-                        // position in sprite
-                        entity.object.xPos,
-                        entity.object.yPos - entity.object.height,
-                        // size of graphic in sprite
-                        entity.object.width,
-                        entity.object.height,
-                        // draw position
-                        drawCoord[0] - entity.object.width / 2,
-                        drawCoord[1] - entity.object.height,
-                        // draw dimensions
-                        entity.object.width,
-                        entity.object.height
-                    )              
-                });
             }
         }, true);
     }
 
-    return { draw }
+    const draw = (coords: tTileCoords, entityObject: tEntityConfig['object']) => {
+        if (!entityObject) return;
+        load_image(entityObject.sprite).then((img) => {
+            if (!entityObject) {
+                return;
+            }
+
+            let drawCoord = coords.slanted.bottom;
+            // if (entityObject.drawPos) {
+            //     if(entityObject.drawPos in coords.slanted) {
+            //         drawCoord = coords.slanted[entityObject.drawPos as str in tEntityConfig]
+            //     }
+            // }
+
+            // TODO: positioning based on drawPos prop
+            ctx.drawImage(
+                img,
+                // position in sprite
+                entityObject.xPos,
+                entityObject.yPos - entityObject.height,
+                // size of graphic in sprite
+                entityObject.width,
+                entityObject.height,
+                // draw position
+                drawCoord[0] - entityObject.width / 2,
+                drawCoord[1] - entityObject.height,
+                // draw dimensions
+                entityObject.width,
+                entityObject.height
+            )              
+        });
+
+    }
+
+    return { draw, draw_all }
 }

@@ -1,4 +1,4 @@
-import { MapCoords, tCoord, tTileCoords } from "./MapCoords"
+import { MapCoords, tCoord, tTileCoordRec, tTileCoords } from "./MapCoords"
 import { eRecType, tMapAt } from "../Map"
 
 export type tConfigTerrain = {
@@ -100,12 +100,7 @@ export const Terrain = (
             startX = startPos.x + ((0.5 * (x-1) * tileDraw.x) - (0.5 * (z-1) * tileDraw.x)),
             startY = startPos.y - ((0.5 * (x-1) * tileDraw.y) + (0.5 * (z-1) * tileDraw.y)) - levelDelta - tileDraw.y;
         
-        const unslanted: { 
-            bottom: tCoord, 
-            right: tCoord, 
-            top: tCoord, 
-            left: tCoord
-        } = {
+        const unslanted: tTileCoordRec = {
             bottom: [startX, startY],
             right: [startX + 0.5 * tileDraw.x, startY - 0.5 * tileDraw.y],
             top: [startX, startY - tileDraw.y],
@@ -138,7 +133,7 @@ export const Terrain = (
         if (typeof mapRec?.type != 'undefined' && (mapRec.type in [eRecType.config, eRecType.filler])) {
             coords.slanted = coords.unslanted
         }
-        
+
         mapCoords.set(x, z, coords);
         return coords;
     }

@@ -1,15 +1,21 @@
-import { tDrawable } from "../../Draw";
-import { tConfigTerrain } from "../Terrain";
+import { tDrawable, tDrawPoints } from "../../Draw";
+import { tConfigTerrain, Terrain } from "../Terrain";
 import { Map as WorldMap, tMapAt } from '../../Map';
-import { eCoordLocations, opposites, tCoord, tTileCoords } from "../MapCoords";
+import { eCoordLocations, MapCoords, opposites, tCoord, tTileCoordRec, tTileCoords } from "../MapCoords";
 
-type tRelevantTile = { -readonly [key in keyof typeof eCoordLocations]?: tCoord }
 
-export const Water: tDrawable = (terrainConfig, map, mapCoords, ctx, terrain) => {    
-    const draw = () => {
+// todo : want to extend the output type, but takes way to long to figure out
+export const Water = (
+        terrainConfig: tConfigTerrain, 
+        map: ReturnType<typeof WorldMap>,
+        mapCoords: ReturnType<typeof MapCoords>,
+        ctx: CanvasRenderingContext2D,
+        terrain: ReturnType<typeof Terrain>
+    ) => {    
+    const draw_all = () => {
         const waterLevel = terrainConfig.level.water;
         let lakePoints: tCoord[] = [];
-        let relevantTiles: tRelevantTile[] = [];
+        let relevantTiles: tTileCoordRec[] = [];
 
         map.iterate((xLoc, zLoc, mapAt) => {
             if (typeof mapAt?.level == "undefined" || mapAt.level > waterLevel || mapAt < waterLevel) {
@@ -30,8 +36,8 @@ export const Water: tDrawable = (terrainConfig, map, mapCoords, ctx, terrain) =>
                     return acc;
                 },
                 {
-                    waterline: {} as { -readonly [key in keyof typeof eCoordLocations]?: tCoord },
-                    below: {} as { -readonly [key in keyof typeof eCoordLocations]?: tCoord }
+                    waterline: {} as tTileCoordRec,
+                    below: {} as tTileCoordRec
                 }
             );
             
@@ -95,16 +101,18 @@ export const Water: tDrawable = (terrainConfig, map, mapCoords, ctx, terrain) =>
             } 
         }
         
-        console.log('lakepoints', lakePoints);
-
-        terrain.draw_lines(lakePoints)
-        ctx.globalAlpha = 0.5
-        ctx.fillStyle = '#00f'
-        ctx.fill()
-        ctx.globalAlpha = 1
-        // how in the hell will we sort this mess to become a circle.
+        draw(lakePoints);
     }
 
-    return { draw }
+    const draw = (waterPoints: tCoord[]) => {
+        ctx.save();        
+        terrain.draw_lines(waterPoints);
+        ctx.globalAlpha = 0.5;
+        ctx.fillStyle = '#00f';
+        ctx.fill();
+        ctx.restore();
+    }
+
+    return { draw, draw_all }
 }
 

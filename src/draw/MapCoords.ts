@@ -8,6 +8,8 @@ export enum eCoordLocations {
     left,
 }
 
+export type tTileCoordRec = Record<keyof typeof eCoordLocations, tCoord>
+
 export const opposites: {[key in keyof typeof eCoordLocations]: eCoordLocations} = {
     bottom: eCoordLocations.top,
     right: eCoordLocations.left,
@@ -16,8 +18,8 @@ export const opposites: {[key in keyof typeof eCoordLocations]: eCoordLocations}
 }
 
 export type tTileCoords = {
-    unslanted: { -readonly [key in keyof typeof eCoordLocations]: tCoord },
-    slanted: { -readonly [key in keyof typeof eCoordLocations]: tCoord }
+    unslanted: tTileCoordRec,
+    slanted: tTileCoordRec
 }
 
 export const MapCoords = () => {

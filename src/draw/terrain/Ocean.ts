@@ -1,8 +1,10 @@
 import { tDrawable } from "../../Draw";
+import { tMapAt } from "../../Map";
 import { tCoord } from "../MapCoords";
+import { Water } from "./Water";
 
-export const Earth: tDrawable = (terrainConfig, map, mapCoords, ctx, terrain) => {    
-
+export const Ocean: tDrawable = (terrainConfig, map, mapCoords, ctx, terrain) => {    
+    const water = Water(terrainConfig, map, mapCoords, ctx, terrain);
     const draw_all = () => {
         type tCoordsAndRefs = {x: number, z:number, point: tCoord}
 
@@ -30,7 +32,7 @@ export const Earth: tDrawable = (terrainConfig, map, mapCoords, ctx, terrain) =>
                     acc.push({
                         x: 1, 
                         z: parseInt(tuple[0] as unknown as string),
-                        point: tuple[1].slanted.bottom
+                        point: tuple[1].slanted.bottom,
                     }); 
                     if (tuple[0] == terrainConfig.dims.z.toString()) {
                         acc.push({
@@ -42,38 +44,33 @@ export const Earth: tDrawable = (terrainConfig, map, mapCoords, ctx, terrain) =>
                     return acc;
                 },
                 [] as tCoordsAndRefs[]
-            ).reverse()
-        ].forEach((edges) => {
-            const earthPoints: tCoord[] = edges.reduce((acc, edge) => {  return [...acc, edge.point] }, [] as tCoord[]);
-            // the right side
-            const 
-                firstTile = map.get(edges[0].x, edges[0].z),
-                lastTile = map.get(edges[edges.length-1].x, edges[edges.length-1].z),
-                lastCoords = edges[edges.length-1];
-            earthPoints.push(
-                [   lastCoords.point[0],
-                    lastCoords.point[1] + 
-                        ((lastTile?.level || terrainConfig.level.plane) - terrainConfig.level.bedrock) *
-                        terrain.tileDraw.y
-                ],
-                [   edges[0].point[0],
-                    edges[0].point[1] + 
-                        ((firstTile?.level || terrainConfig.level.plane) - terrainConfig.level.bedrock) *
-                        terrain.tileDraw.y
-                ],
-                edges[0].point
             )
+        ].forEach((edges) => {
+            const oceanPoints = edges
+                .reduce((acc, edge, edgeIndex) => {
+                    // todo: check against previous point
+                    const 
+                        curTile = map.get(edge.x, edge.z),
+                        prevTile = map.get(edges[edgeIndex-1]?.x, edges[edgeIndex-1]?.z);
+                    if (curTile && (
+                            (typeof curTile.level != 'undefined' && curTile.level <= terrainConfig.level.water) ||
+                            (curTile.hitRecord && typeof curTile.hitRecord.level != 'undefined' && curTile.hitRecord.level <= terrainConfig.level.water) ||
+                            (prevTile && typeof prevTile.level != 'undefined' && prevTile.level <= terrainConfig.level.water)
+                        )) {
+                        acc.push(edge.point);
+                        console.log(curTile, edge, prevTile, edges[edgeIndex-1])
+                    }
+                    return acc
+                }, 
+                [] as tCoord[]
+            );
+            console.log('ocean points are', oceanPoints)
+            water.draw(oceanPoints);
 
-            draw(earthPoints);
         })
     }
     
-    const draw = (earthPoints: tCoord[]) => {
-        terrain.draw_lines(earthPoints);
 
-        ctx.fillStyle = '#964B00';
-        ctx.fill();
-    }
 
     return { draw_all }
 }

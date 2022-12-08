@@ -59,6 +59,7 @@ export const Map = (terrainConfig: tConfigTerrain) => {
             map[x][z] = {...record, type: recType}
         } 
         else {
+            // todo : overwrite?
             console.error('record was already set');
             return;
         }
