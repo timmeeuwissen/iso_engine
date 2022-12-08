@@ -1,13 +1,10 @@
 import { tDrawable } from "../../Draw";
 
 export const Map: tDrawable = (terrainConfig, map, mapCoords, ctx, terrain) => { 
-        
-    const draw_all = () => {
-        // todo : convert to generator function
-        map.iterate(terrain.draw_tile);
-    }
+    const calculate = () => map.iterate(terrain.get_tileCoords);
 
+    // todo : convert to generator function
+    const draw_all = () =>  map.iterate(terrain.draw_tile);
     
-    
-    return { draw_all }
+    return { calculate, draw_all }
 }

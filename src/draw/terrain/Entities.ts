@@ -5,6 +5,9 @@ import { tCoord, tMapCoords, tTileCoords } from "../MapCoords";
 export const Entities: tDrawable = (terrainConfig, map, mapCoords, ctx, terrain) => {       
 
     const images: {[key: string]: Promise<HTMLImageElement>} = {}
+
+    let drawInstructions: [tTileCoords, tEntityConfig['object']][]= []
+
     const load_image = (src: string): Promise<HTMLImageElement> => {
         if (!(src in images)) {
             images[src] = new Promise((resolve, reject) => {
@@ -17,8 +20,9 @@ export const Entities: tDrawable = (terrainConfig, map, mapCoords, ctx, terrain)
 
         return images[src]
     }
-        
-    const draw_all = () => {
+    
+    const calculate = () => {
+        drawInstructions = [];
         map.iterate((xLoc, zLoc, mapAt) => {
             if (!mapAt?.entityReference) {
                 return;
@@ -35,11 +39,14 @@ export const Entities: tDrawable = (terrainConfig, map, mapCoords, ctx, terrain)
                 if (!coords ) {
                     return;
                 }
-
-                draw(coords, entity.object);
-
+                drawInstructions.push([coords, entity.object]);
             }
         }, true);
+
+    }
+
+    const draw_all = () => {
+        drawInstructions.forEach(([coord, object]) => draw(coord, object));
     }
 
     const draw = (coords: tTileCoords, entityObject: tEntityConfig['object']) => {
@@ -76,5 +83,5 @@ export const Entities: tDrawable = (terrainConfig, map, mapCoords, ctx, terrain)
 
     }
 
-    return { draw, draw_all }
+    return { calculate, draw, draw_all }
 }

@@ -1,11 +1,14 @@
 import { tDrawable } from "../../Draw";
 import { tCoord } from "../MapCoords";
 
+type tCoordsAndRefs = {x: number, z:number, point: tCoord}
+
 export const Earth: tDrawable = (terrainConfig, map, mapCoords, ctx, terrain) => {    
 
-    const draw_all = () => {
-        type tCoordsAndRefs = {x: number, z:number, point: tCoord}
+    let drawInstructions:tCoord[] = [];
 
+    const calculate = () => {
+        drawInstructions = [];
         [
             Object.entries(mapCoords.getAll()).reduce(
                 (acc, tuple) => {
@@ -44,13 +47,14 @@ export const Earth: tDrawable = (terrainConfig, map, mapCoords, ctx, terrain) =>
                 [] as tCoordsAndRefs[]
             ).reverse()
         ].forEach((edges) => {
-            const earthPoints: tCoord[] = edges.reduce((acc, edge) => {  return [...acc, edge.point] }, [] as tCoord[]);
+            drawInstructions = [...drawInstructions, ...edges.reduce((acc, edge) => {  return [...acc, edge.point] }, [] as tCoord[])];
             // the right side
             const 
                 firstTile = map.get(edges[0].x, edges[0].z),
                 lastTile = map.get(edges[edges.length-1].x, edges[edges.length-1].z),
                 lastCoords = edges[edges.length-1];
-            earthPoints.push(
+            
+            drawInstructions.push(
                 [   lastCoords.point[0],
                     lastCoords.point[1] + 
                         ((lastTile?.level || terrainConfig.level.plane) - terrainConfig.level.bedrock) *
@@ -64,8 +68,11 @@ export const Earth: tDrawable = (terrainConfig, map, mapCoords, ctx, terrain) =>
                 edges[0].point
             )
 
-            draw(earthPoints);
-        })
+        })        
+    }
+
+    const draw_all = () => {
+        draw(drawInstructions);
     }
     
     const draw = (earthPoints: tCoord[]) => {
@@ -75,5 +82,5 @@ export const Earth: tDrawable = (terrainConfig, map, mapCoords, ctx, terrain) =>
         ctx.fill();
     }
 
-    return { draw_all }
+    return { calculate, draw_all }
 }

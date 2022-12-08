@@ -3,11 +3,13 @@ import { tMapAt } from "../../Map";
 import { tCoord } from "../MapCoords";
 import { Water } from "./Water";
 
+type tCoordsAndRefs = {x: number, z:number, point: tCoord}
+
 export const Ocean: tDrawable = (terrainConfig, map, mapCoords, ctx, terrain) => {    
     const water = Water(terrainConfig, map, mapCoords, ctx, terrain);
-    const draw_all = () => {
-        type tCoordsAndRefs = {x: number, z:number, point: tCoord}
+    let drawInstructions: tCoord[] = [];
 
+    const calculate = () => {
         [
             Object.entries(mapCoords.getAll()).reduce(
                 (acc, tuple) => {
@@ -46,7 +48,7 @@ export const Ocean: tDrawable = (terrainConfig, map, mapCoords, ctx, terrain) =>
                 [] as tCoordsAndRefs[]
             )
         ].forEach((edges) => {
-            const oceanPoints = edges
+            drawInstructions = edges
                 .reduce((acc, edge, edgeIndex) => {
                     // todo: check against previous point
                     const 
@@ -64,13 +66,13 @@ export const Ocean: tDrawable = (terrainConfig, map, mapCoords, ctx, terrain) =>
                 }, 
                 [] as tCoord[]
             );
-            console.log('ocean points are', oceanPoints)
-            water.draw(oceanPoints);
 
         })
     }
     
+    const draw_all = () => {
+        water.draw(drawInstructions);
+    }
 
-
-    return { draw_all }
+    return { calculate, draw_all }
 }

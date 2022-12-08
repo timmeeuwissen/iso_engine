@@ -7,6 +7,7 @@ import { Water as WaterDrawable } from './draw/terrain/Water'
 import { Ocean as OceanDrawable } from './draw/terrain/Ocean'
 import { Map as MapDrawable } from './draw/terrain/Map'
 import { MapCoords, tCoord } from "./draw/MapCoords"
+import { isAccessor } from "typescript"
 
 export type tDrawable = (
     terrainConfig: tConfigTerrain, 
@@ -14,7 +15,10 @@ export type tDrawable = (
     mapCoords: ReturnType<typeof MapCoords>,
     ctx: CanvasRenderingContext2D,
     terrain: ReturnType<typeof Terrain>
-) => { draw_all: () => void }
+) => { 
+    calculate: () => void,
+    draw_all: () => void 
+}
 
 export type tDrawPoints = { draw: (points: tCoord[]) => void }
 
@@ -41,14 +45,17 @@ export const Draw = (
         EntitiesDrawable,
     ];
 
-    // todo ; cache higher than here
-    const draw = () => {
-        drawables.forEach(drawable => {
-            ctx.save();
-            drawable(terrainConfig, map, mapCoords, ctx, terrain).draw_all()
-            ctx.restore();
-        })
-    }
+    // invoke drawables within their own context
+    const drawableCtxs = drawables
+        .reduce(
+            (acc, drawable) => [...acc, drawable(terrainConfig, map, mapCoords, ctx, terrain)], 
+            [] as ReturnType<tDrawable>[]
+        )
+
+    // precalculate all that is needed
+    drawableCtxs.forEach(drawableCtx => drawableCtx.calculate());
+
+    const draw = () => drawableCtxs.forEach(drawableCtx => drawableCtx.draw_all());
 
     return { draw }
 }

@@ -152,6 +152,7 @@ export const Terrain = (
     }
 
     return {
+        get_tileCoords,
         draw_lines,
         draw_tile,
         draw_tile_surface,

@@ -12,9 +12,12 @@ export const Water = (
         ctx: CanvasRenderingContext2D,
         terrain: ReturnType<typeof Terrain>
     ) => {    
-    const draw_all = () => {
+
+    let drawInstructions: tCoord[] = [];
+
+    const calculate = () => {
         const waterLevel = terrainConfig.level.water;
-        let lakePoints: tCoord[] = [];
+        drawInstructions = [];
         let relevantTiles: tTileCoordRec[] = [];
 
         map.iterate((xLoc, zLoc, mapAt) => {
@@ -51,7 +54,7 @@ export const Water = (
 
         let currentTile = relevantTiles.shift()
         if (currentTile) {
-            lakePoints = [...lakePoints, ...Object.values(currentTile) as tCoord[]]
+            drawInstructions = [...drawInstructions, ...Object.values(currentTile) as tCoord[]]
             while (relevantTiles.length) {
                 // find the neighbour
                 const nextIndex = relevantTiles.findIndex((relevantTile) => {
@@ -79,8 +82,8 @@ export const Water = (
                 
                 // filter all the relevant points from the neighbour
                 // only add two, otherwise we're at the risk of drawing triangles.
-                lakePoints = [
-                    ...lakePoints, 
+                drawInstructions = [
+                    ...drawInstructions, 
                     ...Object.entries(relevantTiles[nextIndex] as {[key: string]: tCoord})
                         .reduce((acc: tCoord[], [newLocation, newCoord]): tCoord[] => {
                             Object.entries(currentTile as {[key: string]: tCoord}).forEach(([curLocation]) => {
@@ -101,7 +104,10 @@ export const Water = (
             } 
         }
         
-        draw(lakePoints);
+    }
+
+    const draw_all = () => {
+        draw(drawInstructions);
     }
 
     const draw = (waterPoints: tCoord[]) => {
@@ -113,6 +119,6 @@ export const Water = (
         ctx.restore();
     }
 
-    return { draw, draw_all }
+    return { calculate, draw, draw_all }
 }
 

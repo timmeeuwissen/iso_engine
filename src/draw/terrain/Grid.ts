@@ -4,17 +4,25 @@ import { Map as WorldMap, tMapAt } from '../../Map';
 
 export const Grid: tDrawable = (terrainConfig, map, mapCoords, ctx, terrain) => {    
 
-    const draw_all = () => {
+    let drawInstructions: [number, number][] = [];
+
+    const calculate = () => {
+        drawInstructions = []
         let x:number, z:number
         for (x = 1; x <= terrainConfig.dims.x; x++) {
             for (z = 1; z <= terrainConfig.dims.z; z++) {
                 if (!mapCoords.get(x, z)) {
-                    terrain.draw_tile(x, z)
+                    drawInstructions.push([x, z]);
                 }
             }
         }
+        drawInstructions.forEach(([x, z]) => terrain.get_tileCoords(x, z));
+    }
+
+    const draw_all = () => {
+        drawInstructions.forEach(([x, z]) => terrain.draw_tile(x, z));
     }
 
 
-    return { draw_all }
+    return { calculate, draw_all }
 }
