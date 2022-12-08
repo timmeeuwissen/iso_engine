@@ -72,16 +72,20 @@ export const Water: tDrawable = (terrainConfig, map, mapCoords, ctx, terrain) =>
 
                 
                 // filter all the relevant points from the neighbour
-                lakePoints = Object.entries(relevantTiles[nextIndex] as {[key: string]: tCoord}).reduce((acc, [newLocation, newCoord]) => {
-                    Object.entries(currentTile as {[key: string]: tCoord}).forEach(([curLocation]) => {
-                        if (curLocation != newLocation){
-                            acc.push(newCoord);
-                        }
-                        return acc;
-                    });
+                // only add two, otherwise we're at the risk of drawing triangles.
+                lakePoints = [
+                    ...lakePoints, 
+                    ...Object.entries(relevantTiles[nextIndex] as {[key: string]: tCoord})
+                        .reduce((acc: tCoord[], [newLocation, newCoord]): tCoord[] => {
+                            Object.entries(currentTile as {[key: string]: tCoord}).forEach(([curLocation]) => {
+                                if (curLocation != newLocation && acc.length < 2){
+                                    acc.push(newCoord as tCoord);
+                                }
+                            });
 
-                    return lakePoints;
-                }, lakePoints);
+                            return acc;
+                        }, [])
+                ];
 
                 // carry on from the neighbour onwards
                 currentTile = relevantTiles[nextIndex];
