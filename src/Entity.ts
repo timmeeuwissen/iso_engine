@@ -15,6 +15,13 @@ export type tEntityConfig = {
         width: number,
         height: number,
         drawPos: 'bottom' | 'right' | 'top' | 'left' | 'middle' 
+    },
+    movement?: {
+        delta: {
+            drag: number,
+            steer: number, 
+            gravity: number,
+        }
     }
 }
 

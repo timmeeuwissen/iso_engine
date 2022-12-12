@@ -61,8 +61,9 @@ export const Terrain = (
         ctx.restore();
     }
 
-    const draw_lines = (coords: tCoord[]) => {
+    const draw_lines = (coords: tCoord[], cbBefore?: () => void, cbAfter?: () => void) => {
         ctx.save();
+        if (cbBefore) cbBefore();
         coords.forEach((point, index) => {
             if (!point) return 
 
@@ -80,6 +81,7 @@ export const Terrain = (
                 ctx.stroke();
             }
         });
+        if (cbAfter) cbAfter()
         ctx.restore();
     };
     

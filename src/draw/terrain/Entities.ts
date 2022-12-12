@@ -1,26 +1,12 @@
 import { tDrawable } from "../../Draw";
 import { tEntity, tEntityConfig } from "../../Entity";
 import { tCoord, tMapCoords, tTileCoords } from "../MapCoords";
+import { Sprite } from "../Sprite";
 
 export const Entities: tDrawable = (terrainConfig, map, mapCoords, ctx, terrain) => {       
 
-    const images: {[key: string]: Promise<HTMLImageElement>} = {}
-
     let drawInstructions: [tTileCoords, tEntityConfig['object']][]= []
 
-    const load_image = (src: string): Promise<HTMLImageElement> => {
-        if (!(src in images)) {
-            images[src] = new Promise((resolve, reject) => {
-                let img = new Image()
-                img.onload = () => resolve(img)
-                img.onerror = reject
-                img.src = `assets/${src}`
-            });
-        }
-
-        return images[src]
-    }
-    
     const calculate = () => {
         drawInstructions = [];
         map.iterate((xLoc, zLoc, mapAt) => {
@@ -46,42 +32,8 @@ export const Entities: tDrawable = (terrainConfig, map, mapCoords, ctx, terrain)
     }
 
     const draw_all = () => {
-        drawInstructions.forEach(([coord, object]) => draw(coord, object));
+        drawInstructions.forEach(([coord, object]) => Sprite(ctx).draw(coord.slanted.bottom, object));
     }
 
-    const draw = (coords: tTileCoords, entityObject: tEntityConfig['object']) => {
-        if (!entityObject) return;
-        load_image(entityObject.sprite).then((img) => {
-            if (!entityObject) {
-                return;
-            }
-
-            let drawCoord = coords.slanted.bottom;
-            // if (entityObject.drawPos) {
-            //     if(entityObject.drawPos in coords.slanted) {
-            //         drawCoord = coords.slanted[entityObject.drawPos as str in tEntityConfig]
-            //     }
-            // }
-
-            // TODO: positioning based on drawPos prop
-            ctx.drawImage(
-                img,
-                // position in sprite
-                entityObject.xPos,
-                entityObject.yPos - entityObject.height,
-                // size of graphic in sprite
-                entityObject.width,
-                entityObject.height,
-                // draw position
-                drawCoord[0] - entityObject.width / 2,
-                drawCoord[1] - entityObject.height,
-                // draw dimensions
-                entityObject.width,
-                entityObject.height
-            )              
-        });
-
-    }
-
-    return { calculate, draw, draw_all }
+    return { calculate, draw_all }
 }

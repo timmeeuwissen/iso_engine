@@ -76,10 +76,18 @@ export const Earth: tDrawable = (terrainConfig, map, mapCoords, ctx, terrain) =>
     }
     
     const draw = (earthPoints: tCoord[]) => {
-        terrain.draw_lines(earthPoints);
-
-        ctx.fillStyle = '#964B00';
-        ctx.fill();
+        terrain.draw_lines(
+            earthPoints, 
+            () => {
+                ctx.lineJoin = "round";
+                ctx.lineCap = "round";
+                ctx.strokeStyle = "#000";
+                ctx.lineWidth = 1;
+            },
+            () => {
+                ctx.fillStyle = '#964B00';
+                ctx.fill();
+            });
     }
 
     return { calculate, draw_all }

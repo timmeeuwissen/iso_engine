@@ -23,13 +23,12 @@ export type tDrawable = (
 export type tDrawPoints = { draw: (points: tCoord[]) => void }
 
 export const Draw = (
-    canvas: HTMLCanvasElement, 
+    ctx: CanvasRenderingContext2D, 
     terrainConfig: tConfigTerrain, 
     width:number, 
     height:number,
     map: ReturnType<typeof WorldMap>) => {
 
-    const ctx = canvas.getContext('2d') as CanvasRenderingContext2D
     const mapCoords = MapCoords();
     const terrain = Terrain(ctx, terrainConfig, width, height, mapCoords);
 

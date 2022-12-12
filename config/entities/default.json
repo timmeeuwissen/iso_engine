@@ -26,6 +26,23 @@
             "sizeX": 1,
             "sizeZ": 1
         }
+    },
+    "ball": {
+        "object": {
+            "sprite": "sprites/trees.png",
+            "xPos": 74,
+            "yPos": 242,
+            "width": 68,
+            "height": 150,
+            "drawPos": "middle"
+        },
+        "movement": {
+            "delta": {
+                "steer": 2,
+                "gravity": 1,
+                "drag": 1
+            }
+        }
     }
 
 }

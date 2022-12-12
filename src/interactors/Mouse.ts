@@ -1,18 +1,26 @@
-import { aInteract } from "../aInteract";
+import { tInteractor } from "../tInteract"
 
-class InteractMouse extends aInteract {
+export enum state {down, up, move}
+export type observer = (x: number, y: number, state: state, me: MouseEvent) => void;
 
-    mouseDown(ctx: GlobalEventHandlers, me: MouseEvent) {}
+export const Mouse: tInteractor = (canvas: HTMLCanvasElement) => {
 
-    mouseUp(ctx: GlobalEventHandlers, me: MouseEvent) {}
+    const observers: observer[] = [];
 
-    mouseMove(ctx: GlobalEventHandlers, me: MouseEvent) {}
+    const mouseDown = (evt: MouseEvent) => observers.forEach((cb) => cb(evt.x, evt.y, state.down, evt))
 
-    attach() {
-        // this.container.onmousemove?.(this.mouseMove);
-        // this.container.onmouseup?.(this.mouseUp);
-        // this.container.onmousedown?.(this.mouseDown);
+    const mouseUp = (evt: MouseEvent) => observers.forEach((cb) => cb(evt.x, evt.y, state.up, evt))
+
+    const mouseMove = (evt: MouseEvent) =>  observers.forEach((cb) => cb(evt.x, evt.y, state.move, evt))
+
+    const attach = () => {
+        canvas.onmousedown = mouseDown;
+        canvas.onmouseup = mouseUp;
+        canvas.onmousemove = mouseMove;
     }
+
+    const observe = (cb: observer) => observers.push(cb); 
+
+    return { attach, observe }
 }
 
-export { InteractMouse }
