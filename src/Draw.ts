@@ -56,7 +56,9 @@ export const Draw = (
 
     const draw = () => drawableCtxs.forEach(drawableCtx => drawableCtx.draw_all());
 
-    return { draw }
+    const clear = () => { ctx.clearRect(0, 0, width, height);}
+
+    return { draw, clear }
 }
 
 

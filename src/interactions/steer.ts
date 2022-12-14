@@ -1,3 +1,4 @@
+import { AccessExpression } from "typescript";
 import { Sprite } from "../draw/Sprite"
 import { tEntityConfig } from "../Entity"
 import { Interact } from "../Interact"
@@ -6,10 +7,10 @@ import { TranslateHelper } from "../TranslateHelper";
 
 
 enum KeyCode {
-    left = 37,
-    up = 38,
-    right = 39,
-    down = 40
+    left = 'ArrowLeft',
+    up = 'ArrowUp',
+    right = 'ArrowRight',
+    down = 'ArrowDown',
 }
 
 const initialCalc = {
@@ -77,7 +78,7 @@ export const Steer = (
             apply_position,
             correct_collision,
         ]
-        calculatedNext = CoE.reduce((acc: typeof initialCalc, cb) => cb(acc, time), initialCalc);
+        calculatedNext = CoE.reduce((acc: typeof initialCalc, cb) => cb(acc, 1 / 1000 * time), initialCalc);
         cartesianPosition = translate.iso_to_cartesian(
             calculatedNext.isoPosition.x, 
             calculatedNext.isoPosition.z, 
@@ -86,22 +87,33 @@ export const Steer = (
         console.log(cartesianPosition)
     }
 
-    const calculate_steering: calculationStep = (acc) => {
-        if (activity.up) {acc.isoDeltas.z += movementConf.delta.steer}
-        if (activity.down) {acc.isoDeltas.z -= movementConf.delta.steer}
-        if (activity.left) {acc.isoDeltas.x -= movementConf.delta.steer}
-        if (activity.right) {acc.isoDeltas.x += movementConf.delta.steer}
+    const calculate_steering: calculationStep = (acc, fraction) => {
+        if (activity.up) {acc.isoDeltas.z += movementConf.delta.steer * fraction}
+        if (activity.down) {acc.isoDeltas.z -= movementConf.delta.steer * fraction}
+        if (activity.left) {acc.isoDeltas.x -= movementConf.delta.steer * fraction}
+        if (activity.right) {acc.isoDeltas.x += movementConf.delta.steer * fraction}
         return acc;
     }
 
-    const apply_position: calculationStep = (acc, time) => {
-        acc.isoPosition.x = acc.isoPosition.x + (acc.isoDeltas.x / 1000 * time);
-        acc.isoPosition.y = acc.isoPosition.y + (acc.isoDeltas.y / 1000 * time);
-        acc.isoPosition.z = acc.isoPosition.z + (acc.isoDeltas.z / 1000 * time);
+    const calculate_drag: calculationStep = (acc, fraction) => {
+        Object.keys(acc.isoDeltas).forEach((axleKey) => {
+            const axle = axleKey as unknown as keyof typeof acc.isoDeltas;
+            const directionBeforeDrag = acc.isoDeltas[axle] > 0;
+            acc.isoDeltas[axle] = Math.abs(acc.isoDeltas[axle]) - (movementConf.delta.drag * fraction)
+            if (acc.isoDeltas[axle] < 0) {
+                acc.isoDeltas[axle] = 0;
+            }
+            if (!directionBeforeDrag) {
+                acc.isoDeltas[axle] *= -1;
+            }
+        })
         return acc;
     }
 
-    const calculate_drag: calculationStep = (acc) => {
+    const apply_position: calculationStep = (acc, fraction) => {
+        acc.isoPosition.x = acc.isoPosition.x + (acc.isoDeltas.x);
+        acc.isoPosition.y = acc.isoPosition.y + (acc.isoDeltas.y);
+        acc.isoPosition.z = acc.isoPosition.z + (acc.isoDeltas.z);
         return acc;
     }
 
@@ -113,10 +125,11 @@ export const Steer = (
     const attach = () => {
         interact.interactors.Keyboard.observe(
             (key: string, evt: KeyboardEvent) => {
-                activity.up = (evt.keyCode == KeyCode.up);
-                activity.down = (evt.keyCode == KeyCode.down);
-                activity.left = (evt.keyCode == KeyCode.left);
-                activity.right = (evt.keyCode == KeyCode.right);
+                activity.up = (evt.key == KeyCode.up && evt.type == 'keydown');
+                activity.down = (evt.key == KeyCode.down && evt.type == 'keydown');
+                activity.left = (evt.key == KeyCode.left && evt.type == 'keydown');
+                activity.right = (evt.key == KeyCode.right && evt.type == 'keydown');
+                console.log(evt);
             }
         );
     };
@@ -124,7 +137,7 @@ export const Steer = (
     const draw = () => {
         ctx.save();
         ctx.fillStyle = '#000';
-        ctx.fillRect(cartesianPosition.x, cartesianPosition.y, 2, 2);
+        ctx.fillRect(cartesianPosition.x, cartesianPosition.y, 5, 5);
         ctx.restore();
         // Sprite(ctx).draw([cartesianPosition.x, cartesianPosition.y], entityConfig.object);
     }

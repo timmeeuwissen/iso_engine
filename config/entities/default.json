@@ -38,9 +38,9 @@
         },
         "movement": {
             "delta": {
-                "steer": 2,
-                "gravity": 1,
-                "drag": 1
+                "steer": 0.3,
+                "gravity": 0.2,
+                "drag": 0.1
             }
         }
     }

@@ -37,6 +37,7 @@ export const RunEngine = (canvas: HTMLCanvasElement) => {
     }
     const drawFrame = (time: number) => {
         // console.log('drawing @ FPS', Math.round(1000 / time));
+        draw.clear();
         draw.draw();
         if (user) {
             user.calculate(time);

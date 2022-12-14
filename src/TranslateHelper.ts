@@ -8,7 +8,7 @@ export const TranslateHelper = (mapConfig: tMapConfig) => {
     const iso_to_cartesian = (x: number, z: number, y: number) => {
         return {
             x: x,
-            y: y,
+            y: -z,
         }
     }
 
