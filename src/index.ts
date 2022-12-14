@@ -3,7 +3,7 @@ import { terrain as terrainConfig, canvas as canvasConfig} from '../config/confi
 import * as mapConfig from '../config/maps/default.json'
 import * as entityConfig from '../config/entities/default.json'
 import { Draw } from './Draw'
-import { Map, tMapConfig } from './Map'
+import { eRecType, Map, tMapConfig } from './Map'
 import { tEntityConfigs } from './Entity'
 import { tConfigTerrain } from './draw/Terrain'
 import { createTextChangeRange } from 'typescript'
@@ -31,18 +31,25 @@ export const RunEngine = (canvas: HTMLCanvasElement) => {
         map
     )
     
-    const user = Steer(ctx, entityConfigs.ball, Interact(canvas), mapConfig);
+    const user = Steer(
+        ctx, 
+        'ball', 
+        Interact(canvas), 
+        map, 
+        terrainConfig as unknown as tConfigTerrain
+    );
+
     if(user) {
         user.attach()
     }
+    
     const drawFrame = (time: number) => {
         // console.log('drawing @ FPS', Math.round(1000 / time));
         draw.clear();
-        draw.draw();
         if (user) {
             user.calculate(time);
-            user.draw();
         }
+        draw.draw(time);
         requestAnimationFrame(drawFrame);
     }
 

@@ -1,16 +1,17 @@
 import { AccessExpression } from "typescript";
 import { Sprite } from "../draw/Sprite"
+import { tConfigTerrain } from "../draw/Terrain";
 import { tEntityConfig } from "../Entity"
 import { Interact } from "../Interact"
-import { tMapConfig } from "../Map";
+import { tMapConfig, Map, eRecType } from "../Map";
 import { TranslateHelper } from "../TranslateHelper";
 
 
 enum KeyCode {
-    left = 'ArrowLeft',
-    up = 'ArrowUp',
-    right = 'ArrowRight',
-    down = 'ArrowDown',
+    left    = 'ArrowLeft',
+    up      = 'ArrowUp',
+    right   = 'ArrowRight',
+    down    = 'ArrowDown',
 }
 
 const initialCalc = {
@@ -36,12 +37,14 @@ type calculationStep = (acc: typeof initialCalc, time: number) => typeof initial
 
 export const Steer = (
     ctx: CanvasRenderingContext2D, 
-    entityConfig: tEntityConfig, 
+    entityReference: string, 
     interact: ReturnType<typeof Interact>,
-    mapConfig: tMapConfig
+    map: ReturnType<typeof Map>,
+    terrainConfig: tConfigTerrain
     ) => {    
     
-    const translate = TranslateHelper(mapConfig);
+    const translate = TranslateHelper(map, terrainConfig),
+        entityConfig = map.entityMemory.get(entityReference);
     
     if (!entityConfig.movement) {
         console.error(entityConfig, 'no movement supported');
@@ -51,16 +54,13 @@ export const Steer = (
     const movementConf = entityConfig.movement;   
     
     // cartesian position into which the isometrical position is being translated
-    let cartesianPosition = {
-        x: 0,
-        y: 0,
-    }
+    let tilePosition = undefined;
 
     const activity = {
-        up: false,
-        down: false,
-        left: false,
-        right: false,
+        up:     false,
+        down:   false,
+        left:   false,
+        right:  false,
     }
 
     const get_initial = () => {
@@ -71,6 +71,8 @@ export const Steer = (
     let calculatedNext = get_initial();
 
     const calculate = (time: number) => {
+        map.unset_rec_type(eRecType.dynamic);
+        
         // start Chain of Execution
         const CoE: Array<calculationStep> = [
             calculate_steering,
@@ -79,12 +81,24 @@ export const Steer = (
             correct_collision,
         ]
         calculatedNext = CoE.reduce((acc: typeof initialCalc, cb) => cb(acc, 1 / 1000 * time), initialCalc);
-        cartesianPosition = translate.iso_to_cartesian(
+        tilePosition = translate.iso_to_tile(
             calculatedNext.isoPosition.x, 
             calculatedNext.isoPosition.z, 
             calculatedNext.isoPosition.y
         );
-        console.log(cartesianPosition)
+
+        map.set_fixed(
+            tilePosition.x, 
+            tilePosition.z, 
+            {
+                entityReference,
+                type: eRecType.dynamic,
+                mutations: {
+                    offsetPct: tilePosition.offsetPct
+                }
+            }, 
+            eRecType.dynamic
+        );
     }
 
     const calculate_steering: calculationStep = (acc, fraction) => {
@@ -129,18 +143,9 @@ export const Steer = (
                 activity.down = (evt.key == KeyCode.down && evt.type == 'keydown');
                 activity.left = (evt.key == KeyCode.left && evt.type == 'keydown');
                 activity.right = (evt.key == KeyCode.right && evt.type == 'keydown');
-                console.log(evt);
             }
         );
     };
 
-    const draw = () => {
-        ctx.save();
-        ctx.fillStyle = '#000';
-        ctx.fillRect(cartesianPosition.x, cartesianPosition.y, 5, 5);
-        ctx.restore();
-        // Sprite(ctx).draw([cartesianPosition.x, cartesianPosition.y], entityConfig.object);
-    }
-
-    return { attach, calculate, draw }
+    return { attach, calculate }
 }

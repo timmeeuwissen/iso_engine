@@ -54,11 +54,11 @@ export const Draw = (
     // precalculate all that is needed
     drawableCtxs.forEach(drawableCtx => drawableCtx.calculate());
 
-    const draw = () => drawableCtxs.forEach(drawableCtx => drawableCtx.draw_all());
+    const draw = (time: number) => drawableCtxs.forEach(drawableCtx => drawableCtx.draw_all());
 
     const clear = () => { ctx.clearRect(0, 0, width, height);}
 
-    return { draw, clear }
+    return { draw, clear, mapCoords }
 }
 
 

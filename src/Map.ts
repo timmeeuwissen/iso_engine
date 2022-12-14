@@ -8,12 +8,15 @@ import { ObjectType } from "typescript"
 
 type tResolverCallback = (x: number, z: number) => tMapAt
 
+export type tEntityMutations = {offsetPct?: {x: number, z: number}}
+
 export type tMapRecordEntity = {
     level?: number,
     sizeX?: number,
     sizeZ?: number,
     entityReference?: string,
-    type?: eRecType
+    type?: eRecType,
+    mutations?: tEntityMutations,
 }
 
 type tMapRecordReference = {
@@ -33,11 +36,13 @@ export enum eRecType {
     filler,
     slope,
     other,
+    dynamic,
 }
 
 export type tMapConfig = {[key: number]: {[key: number]: tMapRecordEntity}}
 
 export type tMapRecord = tMapRecordEntity | tMapRecordReference
+
 
 type tMapRecDim = RequireKeys<tMapRecordEntity, 'sizeX' | 'sizeZ'>;
 
@@ -49,7 +54,7 @@ export const Map = (terrainConfig: tConfigTerrain) => {
 
     const entityMemory = EntityMemory()
 
-    const set = (x: number, z: number, record: tMapRecord, recType?: eRecType) => {
+    const set_fixed = (x: number, z: number, record: tMapRecord, recType?: eRecType) => {
         const optimizeKey = typeof recType != 'undefined' ? recType : eRecType.other;
         
         if (!(x in map)) {
@@ -63,7 +68,6 @@ export const Map = (terrainConfig: tConfigTerrain) => {
             console.error('record was already set');
             return;
         }
-
 
         if (typeof typeOptimized[optimizeKey] == 'undefined') {
             typeOptimized[optimizeKey] = []
@@ -124,10 +128,7 @@ export const Map = (terrainConfig: tConfigTerrain) => {
                     }
                 }
             }
-                
-    
-        }
-        
+        }        
     }
 
     //  maintains properties of a tile in the map
@@ -156,7 +157,7 @@ export const Map = (terrainConfig: tConfigTerrain) => {
             ...mapRec
         }
 
-        set(x, z, mapRecDim, recType)
+        set_fixed(x, z, mapRecDim, recType)
         
         if (mapRecDim.sizeX > 1 || mapRecDim.sizeZ > 1){
             let xIncr: number, zIncr: number
@@ -179,7 +180,7 @@ export const Map = (terrainConfig: tConfigTerrain) => {
 
     //  when tiles are bigger, reference resolvers are introduced.
     const set_reference = (x: number, z: number, refX: number, refZ: number, recType?: eRecType, level?: number) => {
-        set(x, z, { resolver: get , refX, refZ, level}, recType)
+        set_fixed(x, z, { resolver: get , refX, refZ, level}, recType)
     }
 
     // gets the item on a map, even if it is part of an earlier, bigger structure.
@@ -230,6 +231,12 @@ export const Map = (terrainConfig: tConfigTerrain) => {
         })
     }
 
+    const unset_rec_type = (recType: eRecType) => {
+        if (!typeOptimized[recType]) return;
+        typeOptimized[recType]?.forEach(coordTuple => delete map[coordTuple[0]][coordTuple[1]]);
+        delete typeOptimized[recType];
+    }
+
     // todo : convert to an iterator
     const iterate = (cb: tIterateCB, reverse = false) => {
         // because of order and absence of order in object
@@ -252,5 +259,5 @@ export const Map = (terrainConfig: tConfigTerrain) => {
         })
     }
 
-    return { generate_implications, entityMemory, load_entities, load_map, iterate, get };
+    return { generate_implications, entityMemory, load_entities, load_map, iterate, get, set_fixed, unset_rec_type };
 }
