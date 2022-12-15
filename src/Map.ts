@@ -49,20 +49,23 @@ type tMapRecDim = RequireKeys<tMapRecordEntity, 'sizeX' | 'sizeZ'>;
 export type tMapAt = (tMapRecordEntity & {hitRecord?: tMapRecordReference}) | undefined
 
 export const Map = (terrainConfig: tConfigTerrain) => {
-    const map: {[key: number]: {[key: number]: tMapRecord}} = {};
+    const map: Record<number, Record<number, Record<eRecType, tMapRecord>>> = {};
     const typeOptimized: {[key in eRecType]?: tCoordTuple[]} = {};
 
     const entityMemory = EntityMemory()
 
     const set_fixed = (x: number, z: number, record: tMapRecord, recType?: eRecType) => {
-        const optimizeKey = typeof recType != 'undefined' ? recType : eRecType.other;
+        const optimizeKey: eRecType = typeof recType != 'undefined' ? recType : eRecType.other;
         
         if (!(x in map)) {
             map[x] = {}
         }
         if (!(z in map[x])) {
-            map[x][z] = {...record, type: recType}
+            map[x][z] = {} as Record<eRecType, tMapRecord>
         } 
+        if (!(optimizeKey in map[x][z])) {
+            map[x][z][optimizeKey] = {...record, type: optimizeKey}
+        }
         else {
             // todo : overwrite?
             console.error('record was already set');
@@ -186,11 +189,16 @@ export const Map = (terrainConfig: tConfigTerrain) => {
     // gets the item on a map, even if it is part of an earlier, bigger structure.
     // when that is the case you get where your exact hit was, but also obtain the higher structure.
     const get = (x: number, z: number): tMapAt => {
-        const exactPosition: tMapRecord | undefined = map[x]?.[z]
+        // todo: you can hit multiple. We need to cater for that.
+        const stuffAtPosition = map[x]?.[z]
         
-        if (!exactPosition) {
+        if (!stuffAtPosition) {
             return undefined;
         }
+        
+        const exactPosition = stuffAtPosition[(Object.values(eRecType) as unknown as eRecType[]).find((recType: eRecType) => {
+            return (recType in stuffAtPosition);
+        }) as eRecType]
 
         // todo: possibility for infinitely cyclic references and recursion
         if('resolver' in exactPosition){
