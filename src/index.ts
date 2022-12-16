@@ -12,7 +12,7 @@ import { Interact } from './Interact'
 // import { ModuleBlock, ModuleBody, ModuleDeclaration } from 'typescript'
 // import { ModuleFormat } from 'rollup'
 
-export const RunEngine = (canvas: HTMLCanvasElement) => {
+export const Engine = (canvas: HTMLCanvasElement, run: boolean = true) => {
     // const interact_strategy = new InteractMouse(canvas)
     const map = Map(terrainConfig as unknown as tConfigTerrain);
     const ctx = canvas.getContext('2d') as CanvasRenderingContext2D
@@ -42,6 +42,7 @@ export const RunEngine = (canvas: HTMLCanvasElement) => {
     if(user) {
         user.attach()
     }
+
     
     const drawFrame = (time: number) => {
         // console.log('drawing @ FPS', Math.round(1000 / time));
@@ -50,11 +51,17 @@ export const RunEngine = (canvas: HTMLCanvasElement) => {
             user.calculate(time);
         }
         draw.draw(time);
-        requestAnimationFrame(drawFrame);
+        // window.setTimeout(() => { requestAnimationFrame(drawFrame) }, 100)
+        if (run) requestAnimationFrame(drawFrame);
     }
 
-    requestAnimationFrame(drawFrame);
+    const set_run = (state: boolean) => {
+        run = state;
+        if (run) {
+            requestAnimationFrame(drawFrame);
+        }
+    }
     
-
-    // todo: execute attach interact strategy
+    requestAnimationFrame(drawFrame);
+    return { drawFrame, set_run }    
 }

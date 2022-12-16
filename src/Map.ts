@@ -188,15 +188,15 @@ export const Map = (terrainConfig: tConfigTerrain) => {
 
     // gets the item on a map, even if it is part of an earlier, bigger structure.
     // when that is the case you get where your exact hit was, but also obtain the higher structure.
-    const get = (x: number, z: number): tMapAt => {
+    const get = (x: number, z: number, recTypes?: eRecType[]): tMapAt => {
         // todo: you can hit multiple. We need to cater for that.
         const stuffAtPosition = map[x]?.[z]
         
         if (!stuffAtPosition) {
             return undefined;
         }
-        
-        const exactPosition = stuffAtPosition[(Object.values(eRecType) as unknown as eRecType[]).find((recType: eRecType) => {
+
+        const exactPosition = stuffAtPosition[(recTypes || Object.values(eRecType) as unknown as eRecType[]).find((recType: eRecType) => {
             return (recType in stuffAtPosition);
         }) as eRecType]
 
@@ -241,14 +241,14 @@ export const Map = (terrainConfig: tConfigTerrain) => {
 
     const unset_rec_type = (recType: eRecType) => {
         if (!typeOptimized[recType]) return;
-        typeOptimized[recType]?.forEach(coordTuple => delete map[coordTuple[0]][coordTuple[1]]);
+        typeOptimized[recType]?.forEach(coordTuple => delete map[coordTuple[0]][coordTuple[1]][recType]);
         delete typeOptimized[recType];
     }
 
     // todo : convert to an iterator
-    const iterate = (cb: tIterateCB, reverse = false) => {
+    const iterate = (cb: tIterateCB, reverse = false, recTypes?: eRecType[]) => {
         // because of order and absence of order in object
-        (Object.values(eRecType) as unknown as eRecType[]).forEach((recType: eRecType, index) => {
+        (recTypes || Object.values(eRecType) as unknown as eRecType[]).forEach((recType: eRecType, index) => {
             if (!typeOptimized[recType]) {
                 return;
             }
@@ -260,7 +260,7 @@ export const Map = (terrainConfig: tConfigTerrain) => {
                     cb(
                         coordTuple[0], 
                         coordTuple[1], 
-                        get(coordTuple[0], coordTuple[1]),
+                        get(coordTuple[0], coordTuple[1], [recType]),
                         recType
                     )
                 }) 

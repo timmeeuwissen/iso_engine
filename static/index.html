@@ -14,8 +14,9 @@
             <canvas id="game_canvas" width="800" height="600"></canvas>
         </div>
         <script type="module">
-            import { RunEngine } from '../js/index.mjs';
-            RunEngine(document.getElementById('game_canvas'));
+            import { Engine } from '../js/index.mjs';
+            const engine = Engine(document.getElementById('game_canvas'));
+            window['engine'] = engine;
         </script>
     </body>
 </html>

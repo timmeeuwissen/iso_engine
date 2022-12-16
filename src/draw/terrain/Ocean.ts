@@ -60,7 +60,6 @@ export const Ocean: tDrawable = (terrainConfig, map, mapCoords, ctx, terrain) =>
                             (prevTile && typeof prevTile.level != 'undefined' && prevTile.level <= terrainConfig.level.water)
                         )) {
                         acc.push(edge.point);
-                        console.log(curTile, edge, prevTile, edges[edgeIndex-1])
                     }
                     return acc
                 }, 

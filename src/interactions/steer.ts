@@ -1,5 +1,4 @@
 import { AccessExpression } from "typescript";
-import { Sprite } from "../draw/Sprite"
 import { tConfigTerrain } from "../draw/Terrain";
 import { tEntityConfig } from "../Entity"
 import { Interact } from "../Interact"
@@ -86,7 +85,6 @@ export const Steer = (
             calculatedNext.isoPosition.z, 
             calculatedNext.isoPosition.y
         );
-
         map.set_fixed(
             tilePosition.x, 
             tilePosition.z, 

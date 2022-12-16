@@ -1,38 +1,52 @@
 import { tDrawable } from "../../Draw";
 import { tEntity, tEntityConfig } from "../../Entity";
+import { eRecType, tMapAt } from "../../Map";
 import { tCoord, tMapCoords, tTileCoords } from "../MapCoords";
 import { Sprite } from "../Sprite";
 
 export const Entities: tDrawable = (terrainConfig, map, mapCoords, ctx, terrain) => {       
 
-    let drawInstructions: [tTileCoords, tEntityConfig['object']][]= []
+    type tDrawInstructions = Array<[tTileCoords, tEntityConfig['object']]>;
+    let drawInstructions:tDrawInstructions = []
+    const sprite = Sprite(ctx);
 
-    const calculate = () => {
-        drawInstructions = [];
-        map.iterate((xLoc, zLoc, mapAt) => {
+    const get_calculation_isolation = () => {
+        const calculationInstructions: tDrawInstructions = [];
+        const cb = (xLoc: number, zLoc: number, mapAt: tMapAt, recType: eRecType) => {
+            
             if (!mapAt?.entityReference) {
                 return;
             }
-
             const entity = map.entityMemory.get(mapAt.entityReference);
             if (!entity) {
                 return;
             }
-            // TODO: cache sprite definition
             if (entity.object?.sprite) {
-
                 const coords = mapCoords.get(xLoc, zLoc);
                 if (!coords ) {
                     return;
                 }
-                drawInstructions.push([coords, entity.object]);
+                calculationInstructions.push([coords, entity.object]);
             }
-        }, true);
+        }
+        const result = () => { return calculationInstructions }
+        return {cb, result};
+    }
 
+    const calculate = () => {
+        drawInstructions = [];
+        const isolation = get_calculation_isolation();
+        map.iterate(isolation.cb, true);
+        drawInstructions = isolation.result();
     }
 
     const draw_all = () => {
-        drawInstructions.forEach(([coord, object]) => Sprite(ctx).draw(coord.slanted.bottom, object));
+        const isolation = get_calculation_isolation();
+        map.iterate(isolation.cb, true, [eRecType.dynamic]);
+        const dynamicInstructions = isolation.result();
+
+        // todo: sort
+        [...drawInstructions, ...dynamicInstructions].forEach(([coord, object]) => sprite.draw(coord.slanted.bottom, object));
     }
 
     return { calculate, draw_all }
