@@ -41,7 +41,7 @@ export const Entities: tDrawable = (terrainConfig, map, mapCoords, ctx, terrain)
                     drawCoord = percentage_between_points(
                         percentage_between_points(coords.slanted.left, coords.slanted.bottom, mapAt.mutations.offsetPct.z),
                         percentage_between_points(coords.slanted.top, coords.slanted.right, mapAt.mutations.offsetPct.z),
-                        mapAt.mutations.offsetPct.x
+                        -mapAt.mutations.offsetPct.x
                     )
                 }
 
