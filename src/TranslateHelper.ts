@@ -1,3 +1,4 @@
+import { tCoord } from "./draw/MapCoords";
 import { tConfigTerrain } from "./draw/Terrain";
 import { Map } from "./Map";
 
@@ -16,8 +17,8 @@ export const TranslateHelper = (map: ReturnType<typeof Map>, terrainConfig: tCon
             z: Math.floor(z / plane_iso_tile_dims.z) + 1,
             y: Math.floor(y / plane_iso_tile_dims.y),
             offsetPct: {
-                x: 100 / Math.floor(x / plane_iso_tile_dims.x) * (x - Math.floor(x / plane_iso_tile_dims.x)),
-                z: 100 / Math.floor(z / plane_iso_tile_dims.z) * (z - Math.floor(z / plane_iso_tile_dims.z))
+                x: (100 / plane_iso_tile_dims.x) * x - Math.floor(x / plane_iso_tile_dims.x),
+                z: (100 / plane_iso_tile_dims.z) * z - Math.floor(z / plane_iso_tile_dims.z)
             }
         }
     }
@@ -29,6 +30,7 @@ export const TranslateHelper = (map: ReturnType<typeof Map>, terrainConfig: tCon
             y: (x / 3 * 2) + z,
         }
     }
+
 
     return { iso_to_tile, iso_to_cartesian }
 }

@@ -54,6 +54,7 @@ export const Steer = (
     
     // cartesian position into which the isometrical position is being translated
     let tilePosition = undefined;
+    let lastTime = 0;
 
     const activity = {
         up:     false,
@@ -79,7 +80,7 @@ export const Steer = (
             apply_position,
             correct_collision,
         ]
-        calculatedNext = CoE.reduce((acc: typeof initialCalc, cb) => cb(acc, 1 / 1000 * time), initialCalc);
+        calculatedNext = CoE.reduce((acc: typeof initialCalc, cb) => cb(acc, (1 / 1000) * (time - lastTime)), initialCalc);
         tilePosition = translate.iso_to_tile(
             calculatedNext.isoPosition.x, 
             calculatedNext.isoPosition.z, 
@@ -97,6 +98,7 @@ export const Steer = (
             }, 
             eRecType.dynamic
         );
+        lastTime = time;
     }
 
     const calculate_steering: calculationStep = (acc, fraction) => {

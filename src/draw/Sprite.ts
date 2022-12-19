@@ -10,7 +10,6 @@ export const Sprite = (ctx: CanvasRenderingContext2D) => {
                 let img = new Image()
                 img.onload = () => {
                     images[src] = img;
-                    console.log(images);
                     resolve(img);
                 }
                 img.onerror = reject
@@ -23,7 +22,7 @@ export const Sprite = (ctx: CanvasRenderingContext2D) => {
 
     const draw = (coords: [x: number, y: number], entityObject: tEntityConfig['object']) => {
         if (!entityObject) return;
-        console.log(images);
+
         if (entityObject.sprite in images) {
             draw_image(images[entityObject.sprite], coords, entityObject)
         }
@@ -53,7 +52,8 @@ export const Sprite = (ctx: CanvasRenderingContext2D) => {
             // draw dimensions
             entityObject.width,
             entityObject.height
-        )              
+        )     
+        
     }
 
     return { draw }

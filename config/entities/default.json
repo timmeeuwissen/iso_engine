@@ -3,7 +3,7 @@
         "object": {
             "sprite": "sprites/trees.png",
             "xPos": 0,
-            "yPos": 242,
+            "yPos": 238,
             "width": 68,
             "height": 150,
             "drawPos": "middle"
@@ -17,8 +17,8 @@
         "object": {
             "sprite": "sprites/trees.png",
             "xPos": 74,
-            "yPos": 242,
-            "width": 68,
+            "yPos": 238,
+            "width": 42,
             "height": 150,
             "drawPos": "middle"
         },
@@ -31,16 +31,16 @@
         "object": {
             "sprite": "sprites/trees.png",
             "xPos": 74,
-            "yPos": 242,
-            "width": 68,
+            "yPos": 238,
+            "width": 42,
             "height": 150,
             "drawPos": "middle"
         },
         "movement": {
             "delta": {
-                "steer": 0.3,
-                "gravity": 0.2,
-                "drag": 0.1
+                "steer": 3,
+                "gravity": 2,
+                "drag": 1
             }
         }
     }
