@@ -8,7 +8,7 @@ import { ObjectType } from "typescript"
 
 type tResolverCallback = (x: number, z: number) => tMapAt
 
-export type tEntityMutations = {offsetPct?: {x: number, z: number}}
+export type tEntityMutations = {offsetPct?: {x: number, z: number, y: number}}
 
 export type tMapRecordEntity = {
     level?: number,
@@ -201,7 +201,7 @@ export const Map = (terrainConfig: tConfigTerrain) => {
         }) as eRecType]
 
         // todo: possibility for infinitely cyclic references and recursion
-        if('resolver' in exactPosition){
+        if(exactPosition && 'resolver' in exactPosition){
             const parentPosition: tMapAt = exactPosition.resolver(exactPosition.refX, exactPosition.refZ)
             if (parentPosition){
                 return { 

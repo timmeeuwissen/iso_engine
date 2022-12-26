@@ -18,6 +18,7 @@ export const Entities: tDrawable = (terrainConfig, map, mapCoords, ctx, terrain)
 
     const get_calculation_isolation = () => {
         const calculationInstructions: tDrawInstructions = [];
+        const levelOffset = (terrainConfig.tile.width / 3 * 2 / 2);
         const cb = (xLoc: number, zLoc: number, mapAt: tMapAt, recType: eRecType) => {
             
             if (!mapAt?.entityReference) {
@@ -34,18 +35,25 @@ export const Entities: tDrawable = (terrainConfig, map, mapCoords, ctx, terrain)
                 }
                 
                 // default to the bottom of the tile as draw coordinate
-                let drawCoord = coords.slanted.bottom;
-
+                let groundCoord = coords.slanted.bottom;
                 // check if we need to move accross the tile
                 if (mapAt.mutations?.offsetPct) {
-                    drawCoord = percentage_between_points(
+                    groundCoord = percentage_between_points(
                         percentage_between_points(coords.slanted.left, coords.slanted.bottom, mapAt.mutations.offsetPct.z),
                         percentage_between_points(coords.slanted.top, coords.slanted.right, mapAt.mutations.offsetPct.z),
                         -mapAt.mutations.offsetPct.x
                     )
+                    const jumpCoord: tCoord = [
+                        groundCoord[0], 
+                        groundCoord[1] + ((mapAt.mutations.offsetPct.y / 100) * levelOffset)
+                    ];
+                    calculationInstructions.push([jumpCoord, entity.object]);
+
+                }
+                else {
+                    calculationInstructions.push([groundCoord, entity.object]);
                 }
 
-                calculationInstructions.push([drawCoord, entity.object]);
             }
         }
         const result = () => { return calculationInstructions }
@@ -63,7 +71,6 @@ export const Entities: tDrawable = (terrainConfig, map, mapCoords, ctx, terrain)
         const isolation = get_calculation_isolation();
         map.iterate(isolation.cb, true, [eRecType.dynamic]);
         const dynamicInstructions = isolation.result();
-        // console.log(dynamicInstructions);
         // todo: sort!
         [...drawInstructions, ...dynamicInstructions].forEach(([coord, object]) => sprite.draw(coord, object));
     }

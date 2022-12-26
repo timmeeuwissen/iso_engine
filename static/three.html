@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Isometric Field</title>
+</head>
+<body>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.119.1/build/three.min.js"></script>
+  <script>
+    // Set up the scene, camera, and renderer
+    const scene = new THREE.Scene();
+    const camera = new THREE.OrthographicCamera(-250, 250, 250, -250, 0.1, 1000);
+    const renderer = new THREE.WebGLRenderer();
+    renderer.setSize( window.innerWidth, window.innerHeight );
+    document.body.appendChild( renderer.domElement );
+    
+    // Create the isometric projection matrix
+    const projectionMatrix = new THREE.Matrix4();
+    projectionMatrix.makeIsometricProjection(250, 250, 250);
+
+    // Create a geometry for the field
+    const geometry = new THREE.BoxGeometry(100, 100, 100);
+
+    // Create a material for the field
+    const material = new THREE.MeshBasicMaterial({ color: 0x00ff00 });
+
+    // Create a mesh from the geometry and material, and add it to the scene
+    const mesh = new THREE.Mesh(geometry, material);
+    scene.add(mesh);
+
+    // Update the projection matrix of the camera
+    camera.projectionMatrix = projectionMatrix;
+
+    // Render the scene
+    function render() {
+      requestAnimationFrame(render);
+      renderer.render(scene, camera);
+    }
+    render();
+  </script>
+</body>
+</html>

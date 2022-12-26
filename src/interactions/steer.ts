@@ -53,7 +53,7 @@ export const Steer = (
     const movementConf = entityConfig.movement;   
     
     // cartesian position into which the isometrical position is being translated
-    let tilePosition = undefined;
+    let tilePosition: ReturnType<typeof translate.iso_to_tile> | undefined = undefined;
     let lastTime = 0;
 
     const activity = {
@@ -77,15 +77,24 @@ export const Steer = (
         const CoE: Array<calculationStep> = [
             calculate_steering,
             calculate_drag,
-            apply_position,
+            calculate_iso_height,
+            apply_iso_position,
             correct_collision,
         ]
         calculatedNext = CoE.reduce((acc: typeof initialCalc, cb) => cb(acc, (1 / 1000) * (time - lastTime)), initialCalc);
+        
         tilePosition = translate.iso_to_tile(
             calculatedNext.isoPosition.x, 
             calculatedNext.isoPosition.z, 
             calculatedNext.isoPosition.y
         );
+        
+        // in order to understand how many floors the entity should be drawn above the ground, we need to 
+        // know at what level the 'ground' is expected to be.
+        const mapAt = map.get(tilePosition.x, tilePosition.z);
+        const groundLevel = mapAt?.level || terrainConfig.level.plane;
+        const levelOffset = (terrainConfig.tile.width / 3 * 2 / 2);
+
         map.set_fixed(
             tilePosition.x, 
             tilePosition.z, 
@@ -93,14 +102,20 @@ export const Steer = (
                 entityReference,
                 type: eRecType.dynamic,
                 mutations: {
-                    offsetPct: tilePosition.offsetPct
+                    offsetPct: {
+                        x: tilePosition.offsetPct.x,
+                        z: tilePosition.offsetPct.z,
+                        y: ((tilePosition.y - groundLevel) * 100) + tilePosition.offsetPct.y
+                    }
                 }
             }, 
             eRecType.dynamic
         );
+        
         lastTime = time;
     }
 
+    // apply keyboard activity proportionally to the framerate on the delta movement in iso perspective
     const calculate_steering: calculationStep = (acc, fraction) => {
         if (activity.up) {acc.isoDeltas.z += movementConf.delta.steer * fraction}
         if (activity.down) {acc.isoDeltas.z -= movementConf.delta.steer * fraction}
@@ -109,6 +124,7 @@ export const Steer = (
         return acc;
     }
 
+    // let drag slow the entity down
     const calculate_drag: calculationStep = (acc, fraction) => {
         Object.keys(acc.isoDeltas).forEach((axleKey) => {
             const axle = axleKey as unknown as keyof typeof acc.isoDeltas;
@@ -124,7 +140,36 @@ export const Steer = (
         return acc;
     }
 
-    const apply_position: calculationStep = (acc, fraction) => {
+    const calculate_iso_height: calculationStep = (acc, fraction) => {
+        const intermediateTilePosition = translate.iso_to_tile(
+            calculatedNext.isoPosition.x, 
+            calculatedNext.isoPosition.z, 
+            calculatedNext.isoPosition.y
+        );
+
+        const mapAt = map.get(intermediateTilePosition.x, intermediateTilePosition.z);
+        const lastHeightByMap = (mapAt?.level || terrainConfig.level.plane) * (terrainConfig.tile.width / 3 * 2 / 2)
+        if (acc.isoPosition.y < lastHeightByMap) {
+            acc.isoPosition.y = lastHeightByMap
+        }
+
+        // if we hover above the ground, apply gravity
+        if(acc.isoPosition.y - lastHeightByMap > 0) {
+            acc.isoDeltas.y -= (entityConfig.movement?.delta.gravity || 0.01) * fraction;
+        }
+
+        // todo: implement terminal velocity
+
+        // correct so we don't fall through the floor
+        if (acc.isoPosition.y - lastHeightByMap < 0) {
+            acc.isoPosition.y = lastHeightByMap;
+        }
+        console.log(acc.isoPosition.y, acc.isoDeltas.y, intermediateTilePosition);
+
+        return acc;
+    }
+
+    const apply_iso_position: calculationStep = (acc, fraction) => {
         acc.isoPosition.x = acc.isoPosition.x + (acc.isoDeltas.x);
         acc.isoPosition.y = acc.isoPosition.y + (acc.isoDeltas.y);
         acc.isoPosition.z = acc.isoPosition.z + (acc.isoDeltas.z);

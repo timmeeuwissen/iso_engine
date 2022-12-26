@@ -17,8 +17,9 @@ export const TranslateHelper = (map: ReturnType<typeof Map>, terrainConfig: tCon
             z: Math.floor(z / plane_iso_tile_dims.z) + 1,
             y: Math.floor(y / plane_iso_tile_dims.y),
             offsetPct: {
-                x: (100 / plane_iso_tile_dims.x) * (x % plane_iso_tile_dims.x),  // - Math.floor(x / plane_iso_tile_dims.x),
-                z: (100 / plane_iso_tile_dims.z) *  (z % plane_iso_tile_dims.z)// - Math.floor(z / plane_iso_tile_dims.z)
+                x: (100 / plane_iso_tile_dims.x) * (x % plane_iso_tile_dims.x),
+                z: (100 / plane_iso_tile_dims.z) * (z % plane_iso_tile_dims.z),
+                y: (100 / plane_iso_tile_dims.y) * (y % plane_iso_tile_dims.y)
             }
         }
     }
